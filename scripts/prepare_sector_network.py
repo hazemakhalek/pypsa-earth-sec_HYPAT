@@ -1540,25 +1540,32 @@ def add_land_transport(n, costs):
             carrier="land transport oil",
             p_set=ice_share / ice_efficiency * transport[nodes],
         )
-
-        bio_share_dict = {
-            2030: {"BS": 0.378, "AP": 0.378, "NZ": 0.378},
-            2050: {"BS": 0.267, "AP": 0.267, "NZ": 0.048},
-        }  # TODO
-        bio_share = bio_share_dict[
-            snakemake.config["scenario"]["planning_horizons"][0]
-        ][snakemake.config["scenario"]["demand"][0]]
-
-        co2 = (
-            ice_share
-            / ice_efficiency
-            * transport[nodes].sum().sum()
-            / 8760
-            * costs.at["oil", "CO2 intensity"]
-            # * (1 - bio_share)
-            # / ice_share
-        )
-
+        if countries == ["BR"]:
+            bio_share_dict = {
+                2030: {"BS": 0.378, "AP": 0.378, "NZ": 0.378},
+                2050: {"BS": 0.267, "AP": 0.267, "NZ": 0.048},
+            }  # TODO
+            bio_share = bio_share_dict[
+                snakemake.config["scenario"]["planning_horizons"][0]
+            ][snakemake.config["scenario"]["demand"][0]]
+    
+            co2 = (
+                ice_share
+                / ice_efficiency
+                * transport[nodes].sum().sum()
+                / 8760
+                * costs.at["oil", "CO2 intensity"]
+                * (1 - bio_share)
+                / ice_share
+            )
+        else:
+            co2 = (
+                ice_share
+                / ice_efficiency
+                * transport[nodes].sum().sum()
+                / 8760
+                * costs.at["oil", "CO2 intensity"]
+            )
         n.add(
             "Load",
             "land transport oil emissions",
