@@ -127,6 +127,7 @@ rule add_export:
         shapes_path=pypsaearth(
             "resources/bus_regions/regions_onshore_elec_s{simpl}_{clusters}.geojson"
         ),
+        ee_reduction_ptx = "resources/custom_data/ee_reduction_ptx_{planning_horizons}.csv",
     output:
         RDIR
         + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
@@ -513,9 +514,7 @@ if config["custom_data"].get("industry_demand", False) == True:
             ),
             clustered_pop_layout="resources/population_shares/pop_layout_elec_s{simpl}_{clusters}.csv",
             industrial_database="resources/custom_data/industrial_database.csv",
-            shapes_path=pypsaearth(
-                "resources/bus_regions/regions_onshore_elec_s{simpl}_{clusters}.geojson"
-            ),
+            shapes_path=pypsaearth("resources/bus_regions/regions_onshore_elec_s{simpl}_{clusters}.geojson")
             #shapes_path="../pypsa-earth/resources/shapes/MAR2.geojson",
         output:
             industrial_distribution_key="resources/demand/industrial_distribution_key_elec_s{simpl}_{clusters}.csv",
