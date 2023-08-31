@@ -63,7 +63,8 @@ def prepare_transport_data(n):
 
     energy_totals = pd.read_csv(
         snakemake.input.energy_totals_name,
-        index_col=0,
+        index_col=0,keep_default_na=False,
+        na_values=[""]
     )  # TODO change with real numbers
 
     nodal_energy_totals = energy_totals.loc[pop_layout.ct].fillna(0.0)
@@ -75,7 +76,8 @@ def prepare_transport_data(n):
     # Get overall demand curve for all vehicles
 
     traffic = pd.read_csv(
-        snakemake.input.traffic_data_KFZ, skiprows=2, usecols=["count"]
+        snakemake.input.traffic_data_KFZ, skiprows=2, usecols=["count"],keep_default_na=False,
+        na_values=[""]
     ).squeeze("columns")
 
     # Generate profiles
@@ -89,7 +91,8 @@ def prepare_transport_data(n):
     transport_shape = transport_shape / transport_shape.sum()
 
     transport_data = pd.read_csv(
-        snakemake.input.transport_name, index_col=0, keep_default_na=False
+        snakemake.input.transport_name, index_col=0,keep_default_na=False,
+        na_values=[""]
     )
 
     nodal_transport_data = transport_data.loc[pop_layout.ct].fillna(0.0)
@@ -157,7 +160,8 @@ def prepare_transport_data(n):
     # derive plugged-in availability for PKW's (cars)
 
     traffic = pd.read_csv(
-        snakemake.input.traffic_data_Pkw, skiprows=2, usecols=["count"]
+        snakemake.input.traffic_data_Pkw, skiprows=2, usecols=["count"],keep_default_na=False,
+        na_values=[""]
     ).squeeze("columns")
 
     avail_max = options.get("bev_avail_max", 0.95)
@@ -213,7 +217,8 @@ if __name__ == "__main__":
     n = pypsa.Network(snakemake.input.network)
 
     # Get population layout
-    pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0)
+    pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0,keep_default_na=False,
+        na_values=[""])
 
     # Add options
     options = snakemake.config["sector"]

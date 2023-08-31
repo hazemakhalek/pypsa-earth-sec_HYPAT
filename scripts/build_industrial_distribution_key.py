@@ -113,7 +113,7 @@ if __name__ == "__main__":
         snakemake.input.industrial_database,
         sep=",",
         header=0,
-        keep_default_na=False,  # , index_col=0
+        keep_default_na=False, na_values=[""] # , index_col=0
     )
 
     gadm_clustering = snakemake.config["clustering_options"]["alternative_clustering"]

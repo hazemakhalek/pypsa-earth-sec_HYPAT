@@ -566,9 +566,8 @@ def add_biomass(n, costs):
         transport_costs = pd.read_csv(
             snakemake.input.biomass_transport_costs,
             index_col=0,
-            squeeze=True,
             keep_default_na=False,
-        )
+        ).squeeze()
 
         # add biomass transport
         biomass_transport = create_network_topology(
@@ -808,11 +807,11 @@ def add_aviation(n, cost):
     )
 
     airports = pd.concat([airports, ind])
-    airports = airports.fillna(0)
+    
 
     # airports = airports[~airports.index.duplicated(keep="first")]
     airports = airports.groupby(airports.index).sum()
-
+    airports = airports.fillna(0)
     n.madd(
         "Load",
         nodes,
@@ -955,8 +954,8 @@ def h2_hc_conversions(n, costs):
 
 def add_shipping(n, costs):
     ports = pd.read_csv(
-        snakemake.input.ports, index_col=None, squeeze=True, keep_default_na=False
-    )
+        snakemake.input.ports, index_col=None, keep_default_na=False
+    ).squeeze()
     ports = ports[ports.country.isin(countries)]
 
     gadm_level = options["gadm_level"]
@@ -1005,10 +1004,10 @@ def add_shipping(n, costs):
     ports = pd.concat([ports, ind])
 
     # ports = ports[~ports.index.duplicated(keep="first")]
-    # ports = ports.groupby(ports.index).sum()
+    ports = ports.groupby(ports.index).sum()
 
     ports = ports.fillna(0)
-    ports = ports.groupby(ports.index).sum()
+    #ports = ports.groupby(ports.index).sum()
 
     if options["shipping_hydrogen_liquefaction"]:
         n.madd("Bus", nodes, suffix=" H2 liquid", carrier="H2 liquid", location=nodes)
@@ -2369,7 +2368,7 @@ if __name__ == "__main__":
         )
 
     # Load population layout
-    pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0)
+    pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0, keep_default_na=False, na_values=[""])
 
     # Load all sector wildcards
     options = snakemake.config["sector"]
@@ -2395,7 +2394,7 @@ if __name__ == "__main__":
     # Fetch wildcards
     investment_year = int(snakemake.wildcards.planning_horizons[-4:])
     demand_sc = snakemake.wildcards.demand  # loading the demand scenrario wildcard
-    pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0)
+    pop_layout = pd.read_csv(snakemake.input.clustered_pop_layout, index_col=0, keep_default_na=False, na_values=[""])
 
     # Prepare the costs dataframe
     costs = prepare_costs(
