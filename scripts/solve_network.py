@@ -244,11 +244,11 @@ def monthly_constraints(n, n_ref):
 
     res = linexpr((weightings_gen, get_var(n, "Generator", "p")[res_gen_index])).sum(
         axis=1
-    ) + linexpr(
-        (weightings_stor, get_var(n, "StorageUnit", "p_dispatch")[res_stor_index])
-    ).sum(
-        axis=1
-    )  # single line sum
+     ) # + linexpr(
+    #     (weightings_stor, get_var(n, "StorageUnit", "p_dispatch")[res_stor_index])
+    # ).sum(
+    #     axis=1
+    # )  # single line sum
     res = res.groupby(res.index.month).sum()
 
     electrolysis = get_var(n, "Link", "p")[

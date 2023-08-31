@@ -377,7 +377,7 @@ def add_hydrogen(n, costs):
                 h2_links.at[name, "bus0"] = buses[0]
                 h2_links.at[name, "bus1"] = buses[1]
                 h2_links.at[name, "length"] = candidates.at[candidate, "length"]
-                h2_links.at[name, "capacity"] = candidates.at[candidate, "capacity"]
+                #h2_links.at[name, "capacity"] = candidates.at[candidate, "capacity"]
 
         # TODO Add efficiency losses
     if snakemake.config["H2_network"]:
@@ -389,8 +389,8 @@ def add_hydrogen(n, costs):
                 bus1=h2_links.bus1.values + " H2",
                 p_min_pu=-1,
                 p_nom_extendable=True,
-                p_nom_max=h2_links.capacity.values
-                * 0.8,  # https://gasforclimate2050.eu/wp-content/uploads/2020/07/2020_European-Hydrogen-Backbone_Report.pdf
+                #p_nom_max=h2_links.capacity.values ##TODO check h2 capacity first
+                #* 0.8,  # https://gasforclimate2050.eu/wp-content/uploads/2020/07/2020_European-Hydrogen-Backbone_Report.pdf
                 length=h2_links.length.values,
                 capital_cost=costs.at["H2 (g) pipeline repurposed", "fixed"]
                 * h2_links.length.values,
