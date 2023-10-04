@@ -258,25 +258,25 @@ def plot_expansion(n):
     ax.set_xlabel('Generation technology')
     ax.set_ylabel('Capacity in GW')
 
-def plot_h2_exports(n, sample_rate='W', aggregated=True):
-    links = n.links
-    links_t = n.links_t
+# def plot_h2_exports(n, sample_rate='W', aggregated=True):
+#     links = n.links
+#     links_t = n.links_t
 
-    exp_h2_links = n.links.loc[links.bus1 == 'H2 export bus']
-    exp_h2_links_ts = links_t.p0[exp_h2_links.index] * n.snapshot_weightings.iloc[0,0] / 1e3
-    exp_h2_links_ts = exp_h2_links_ts.resample(sample_rate).sum()
+#     exp_h2_links = n.links.loc[links.bus1 == 'H2 export bus']
+#     exp_h2_links_ts = links_t.p0[exp_h2_links.index] * n.snapshot_weightings.iloc[0,0] / 1e3
+#     exp_h2_links_ts = exp_h2_links_ts.resample(sample_rate).sum()
 
-    if aggregated:
-        exp_h2_links_ts = exp_h2_links_ts.sum(axis=1)
+#     if aggregated:
+#         exp_h2_links_ts = exp_h2_links_ts.sum(axis=1)
 
-    fig, ax = plt.subplots(1, 1)
+#     fig, ax = plt.subplots(1, 1)
 
-    exp_h2_links_ts.plot(ax=ax).legend(bbox_to_anchor=(1.1, 1.1))
+#     exp_h2_links_ts.plot(ax=ax).legend(bbox_to_anchor=(1.1, 1.1))
 
-    ax.set_ylabel('Export quantity in GWh for chosen sample rate')
-    ax.set_xlabel('Snapshot')
-    if aggregated == False:
-        print('\n\nHighest H2 delivery from {}'.format(exp_h2_links_ts.sum().sort_values(ascending=False).idxmax()))
+#     ax.set_ylabel('Export quantity in GWh for chosen sample rate')
+#     ax.set_xlabel('Snapshot')
+#     if aggregated == False:
+#         print('\n\nHighest H2 delivery from {}'.format(exp_h2_links_ts.sum().sort_values(ascending=False).idxmax()))
 
 
 
@@ -487,7 +487,7 @@ def calc_energy_mix(n):
     gens_hydro.columns = n.storage_units.loc[gens_hydro.columns, 'carrier'].str.strip()#.apply(rename_techs_tyndp)
     gens_hydro = gens_hydro.T.groupby(gens_hydro.columns).sum().T
 
-    gen_stor = n.stores_t.p.filter(regex='biomass|oil|biogas|H2 Store|battery|gas Store') / 1e6 * 3
+    gen_stor = n.stores_t.p.filter(regex='biomass|oil|biogas|gas Store') / 1e6 * 3
     gen_stor.columns = n.stores.loc[gen_stor.columns,'carrier'].str.strip()#.apply(rename_techs_tyndp)
 
     gen_stor = gen_stor.T.groupby(gen_stor.columns).sum().T#.drop('CCS', axis=1)
@@ -652,9 +652,12 @@ def create_summary_df(run_name):
         summary.to_csv(os.getcwd()+'/pypsa-earth-sec/outputs/{}/tables/summary.csv'.format(run_name))
     return summary
 
-def get_summary_df(run_name):
+def get_summary_df(run_name, update_table=True):
     try:
         df = pd.read_csv(os.getcwd()+'/pypsa-earth-sec/outputs/{}/tables/summary.csv'.format(run_name))
+        if update_table == True:
+            print('Updating existing summary dataframe for given run {}'.format(run_name))
+            df = create_summary_df(run_name)
     except:
         print('Creating summary dataframe for given run {}'.format(run_name))
         df = create_summary_df(run_name)
@@ -711,8 +714,8 @@ def plot_average_h2_costs(summary):
                 h2_costs = costs_y_s.exp_h2_cost_norm
             else:
                 h2_costs = costs_y_s.exp_h2_cost_norm_add_ex
-            ax.plot(costs_y_s.export_quantity, h2_costs, label=scen_dict[s], color=color_dict[s], linestyle='dashed', alpha=0.8, linewidth=0.8,  marker='o', markersize=10)
-            ax.scatter(costs_y_s.export_quantity, h2_costs, color=color_dict[s], s=30)
+            ax.plot(costs_y_s.export_quantity, h2_costs, label=scen_dict[s], color=color_dict[s], linestyle='dashed', alpha=0.8, linewidth=0.8)
+            ax.scatter(costs_y_s.export_quantity.iloc[1:], h2_costs.iloc[1:], color=color_dict[s], s=30)
         
         ax.set_xlabel('Export quantity steps in TWh', fontsize=14)
         ax.set_ylabel('Average normalized costs of\nexported hydrogen in €/kg', fontsize=14)
@@ -741,8 +744,8 @@ def plot_h2_mp_exp(summary):
             costs_y_s = costs_y.loc[costs_y.scenario == s]
             h2_costs = costs_y_s.exp_h2_cost_mp
             
-            ax.plot(costs_y_s.export_quantity, h2_costs, label=scen_dict[s], color=color_dict[s], linestyle='dashed', alpha=0.8, linewidth=0.8,  marker='o', markersize=10)
-            ax.scatter(costs_y_s.export_quantity, h2_costs, color=color_dict[s], s=30)
+            ax.plot(costs_y_s.export_quantity, h2_costs, label=scen_dict[s], color=color_dict[s], linestyle='dashed', alpha=0.8, linewidth=0.8)
+            ax.scatter(costs_y_s.export_quantity.iloc[1:], h2_costs.iloc[1:], color=color_dict[s], s=30)
         
         ax.set_xlabel('Export quantity steps in TWh', fontsize=14)
         ax.set_ylabel('Weighted average price of\nexported hydrogen in €/kg', fontsize=14)
@@ -796,25 +799,11 @@ def plot_h2_exports(ns, summary, sample_rate='W', scenario='AP'):
                     2050: list(summary.loc[summary.year ==2050, 'export_quantity'].unique())} # , 2050: [10, 100, 500, 1000, 3000]
     scen_dict={'BS':'Conservative', 'AP':'Realistic', 'NZ':'Optimistic'}
 
-    fig, ax = plt.subplots(5, 2, figsize=(12, 10))
+    fig, ax = plt.subplots(5, len(summary.year.unique()), figsize=(12, 10))
 
     keys_list = list(ex_quantities.keys())
 
     exp_h2_dict = {}
-
-    # ports = {
-    #     'BR.6_1_AC H2 export': 'Pecem (BR.6)',
-    #     'BR.5_1_AC H2 export': 'Aratu (BR.5)',
-    #     'BR.19_1_AC H2 export': 'Itaguai (BR.19)',
-    #     'BR.21_1_AC H2 export': 'Rio Grande (BR.21)',
-    # }
-
-    # color_mapping = {
-    #     'Pecem (BR.6)': '#3d8fbf', 
-    #     'Aratu (BR.5)': '#aa1232',
-    #     'Itaguai (BR.19)': '#7b69a7', 
-    #     'Rio Grande (BR.21)': '#4d7d2a', 
-    # }
 
     for year, quantities in ex_quantities.items():
         position_x =  keys_list.index(year)
@@ -833,18 +822,29 @@ def plot_h2_exports(ns, summary, sample_rate='W', scenario='AP'):
 
             #exp_h2_links_ts.rename(columns=ports, inplace=True)
 
-            exp_h2_links_ts.plot(ax=ax[position_y, position_x])
+            if len(summary.year.unique()) > 1:
+                exp_h2_links_ts.plot(ax=ax[position_y, position_x])
 
-            # Set the title
-            ax[position_y, position_x].set_title('{} {} {} TWh'.format(year, scen_dict[scenario], q))
-            ax[position_y, position_x].legend(bbox_to_anchor=(1, 2))
-            if idx > 0:
-                ax[position_y, position_x].legend().set_visible(False)  # Hide the legend for the first subplot
-            ax[position_y, position_x].set_xlabel('')  # Hide the x-label
+                # Set the title
+                ax[position_y, position_x].set_title('{} {} {} TWh'.format(year, scen_dict[scenario], q))
+                ax[position_y, position_x].legend(bbox_to_anchor=(1, 2))
+                if idx > 0:
+                    ax[position_y, position_x].legend().set_visible(False)  # Hide the legend for the first subplot
+                ax[position_y, position_x].set_xlabel('')  # Hide the x-label
+            else:
+                exp_h2_links_ts.plot(ax=ax[position_y])
 
-            
+                # Set the title
+                ax[position_y].set_title('{} {} {} TWh'.format(year, scen_dict[scenario], q))
+                # ax[position_y].legend(bbox_to_anchor=(1, 2))
+                if idx > 0:
+                    ax[position_y].legend().set_visible(False)  # Hide the legend for the first subplot
+                ax[position_y].set_xlabel('')  # Hide the x-label 
 
-    handles, labels = ax[position_y, position_x].get_legend_handles_labels()
+    if len(summary.year.unique()) > 1:
+        handles, labels = ax[position_y, position_x].get_legend_handles_labels()
+    else:
+        handles, labels = ax[position_y].get_legend_handles_labels()
     fig.legend(handles, labels, bbox_to_anchor=(0.8, 0.95), ncol=4)
 
     # Modify the legend labels
@@ -918,9 +918,13 @@ def plot_h2_infra(network):
         if q > 200:
             bus_size_factor = 1e10#1e10
             linewidth_factor = 1e4
+            elec_leg = 50
+            pip_leg = 20
         else:
             bus_size_factor = 1e9#1e10
             linewidth_factor = 1e2
+            elec_leg = 5
+            pip_leg = 1
         # MW below which not drawn
         line_lower_threshold = 1e2
         bus_color = 'm'
@@ -981,9 +985,9 @@ def plot_h2_infra(network):
 
 
         handles = make_legend_circles_for(
-            [5e9, 1e9], scale=bus_size_factor/1e9, facecolor=bus_color
+            [elec_leg*1e9, 0.2*elec_leg*1e9], scale=bus_size_factor/1e9, facecolor=bus_color
         )
-        labels = ["{} GW".format(s) for s in (5, 1)]
+        labels = ["{} GW".format(s) for s in (elec_leg, int(0.2*elec_leg))]
         l2 = ax.legend(
             handles,
             labels,
@@ -999,7 +1003,7 @@ def plot_h2_infra(network):
         handles2 = []
         labels = []
 
-        for s in (1, 0.1):
+        for s in (pip_leg, int(0.1*pip_leg)):
             handles2.append(
                 plt.Line2D([0], [0], color=link_color, linewidth=s * 1e3 / linewidth_factor)#*1e3
             )
@@ -1015,3 +1019,221 @@ def plot_h2_infra(network):
             title="H2 pipeline capacity",
         )
         ax.add_artist(l1_1)
+
+def plot_res_caps(df):
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(8, 6)
+    df = df.filter(regex='cap$').drop(df.filter(regex='_AC').columns, axis=1).drop('battery_cap', axis=1)
+    df = df.rename(lambda c: c.split('_')[0], axis=1)
+    colors={
+            'solar':'gold',
+            'onwind':'blue',
+            'onwind2':'royalblue',
+            'offwind':'lightblue',
+            'offwind2':'dodgerblue',
+            'roof':'orange',
+            'csp':'coral'
+        }
+    df.plot.bar(stacked=True, ax=ax, color=df.columns.map(colors))
+    ax.set_ylabel('Installed capacity in MW')
+
+def plot_res_caps_exp_nodes(df, technology='solar'):
+    fig, ax = plt.subplots(1,3)
+    fig.set_size_inches(20, 6)
+    for (i_s, s) in enumerate(df.index.get_level_values(1).unique()):
+        df_s = df.reset_index()
+        df_s = df_s.loc[df_s.scenario == s].set_index(['scenario', 'export_quantity'])
+        df_s_exp = df_s.filter(regex='cap$').filter(regex='_AC')
+        #.filter(regex=technology)
+        df_s_exp = df_s_exp.rename(lambda c: c.split(' ')[3], axis=1)
+        df_s_exp = df_s_exp.T.groupby(df_s_exp.T.index).sum().T
+        colors={
+            'solar':'gold',
+            'onwind':'blue',
+            'onwind2':'royalblue',
+            'offwind':'lightblue',
+            'offwind2':'dodgerblue',
+            'rooftop-solar':'orange',
+            'csp':'coral'
+        }
+        if i_s > 0:
+            df_s_exp.plot.bar(stacked=True, ax=ax[i_s], color=df_s_exp.columns.map(colors))
+        else:
+            df_s_exp.plot.bar(stacked=True, ax=ax[i_s], color=df_s_exp.columns.map(colors))
+        ax[i_s].set_ylabel('Installed capacity in MW')
+
+def plot_uhs_caps(ns):
+    df = pd.DataFrame()
+    for y in ns.keys():
+        fig, ax = plt.subplots(1, 1)
+        fig.set_size_inches(8, 6)
+        ns_y = ns[y]
+        for (j, s) in enumerate(ns_y.keys()):
+            ns_y_s = ns_y[s]
+            for (i, q) in enumerate(ns_y_s.keys()):
+                n = ns_y_s[q]
+                n_uhs = n.stores.filter(like='H2 Store', axis=0)
+                n_uhs = n_uhs[n_uhs.e_nom_opt > 0].e_nom_opt.to_frame().T
+                n_uhs.index = [i]
+
+                df_n = pd.DataFrame(data={'scenario':s, 'export_quantity':q}, index=[i])
+                df_n = pd.concat([df_n, n_uhs], axis=1)
+                df = pd.concat([df, df_n])
+            if j > 0:
+                df.set_index(['scenario', 'export_quantity']).plot.bar(stacked=True, ax=ax, cmap='spring_r', legend=False)
+            else:
+                df.set_index(['scenario', 'export_quantity']).plot.bar(stacked=True, ax=ax, cmap='spring_r', legend=True)
+            ax.set_ylabel('Hydrogen storage capacity in MWh')
+            
+def plot_elec_mix(df):
+    df = df.reset_index()
+    fig, ax = plt.subplots(1,3)
+    fig.set_size_inches(20, 6)
+
+    #demand = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity']).ac_demand
+    for (idx_s,s) in enumerate(df.scenario.unique()):
+        df_s = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity'])[['electricity_mix_rel']]
+        df_s_tech = df_s.electricity_mix_rel.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: s.split(' ')[0]))
+        df_s_shares = df_s.electricity_mix_rel.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split(' ')[-1])*100))
+        df_s_shares.columns = df_s_tech.iloc[0].values
+        df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
+
+        # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
+        # df_s_value = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[-1])
+        # df_s_value = df_s_value.iloc[1:].astype(float)
+        # df_s_value.index = df_s_key.iloc[1:].values
+        #mix_s = pd.DataFrame(index=df_s.index, data=df_s_value.to_dict())
+        #mix_s = mix_s * demand
+        colors={
+            'solar':'gold',
+            'onwind':'steelblue',
+            'onwind2':'royalblue',
+            'offwind':'lightblue',
+            'offwind2':'cyan',
+            'rooftop-solar':'orange',
+            'csp':'coral',
+            'biomass':'green',
+            'hydro':'midnightblue',
+            'ror':'slateblue',
+            'nuclear':'greenyellow',
+            'coal':'brown',
+            'OCGT':'red',
+            'CCGT':'darkred',
+            'oil':'grey'
+        }
+        
+        df_s_shares.plot.bar(stacked=True, ax=ax[idx_s], color=df_s_shares.columns.map(colors))
+    
+        ax[idx_s].set_ylabel('Electricity share [%]')
+        
+        h, l = ax[idx_s].get_legend_handles_labels()
+        #ax[idx_s].legend(bbox_to_anchor=(0.6,1.3), ncol=3, handles=h[:int(len(h)/3)], labels=l[:int(len(l)/3)])
+        ax[idx_s].legend(bbox_to_anchor=(1,1.3), ncol=3, handles=h, labels=l)
+
+def plot_energy_mix(df):
+    df = df.reset_index()
+    fig, ax = plt.subplots(1,3)
+    fig.set_size_inches(20, 6)
+
+    #demand = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity']).ac_demand
+    for (idx_s,s) in enumerate(df.scenario.unique()):
+        df_s = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity'])[['energy_mix_abs']]
+        df_s_tech = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: s.split('   ')[0]))
+        df_s_shares = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split('   ')[-1])))
+        df_s_shares.columns = df_s_tech.iloc[0].values
+        df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
+        df_s_shares.columns = df_s_shares.columns[df_s_shares.iloc[-1].argsort()]
+
+        # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
+        # df_s_value = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[-1])
+        # df_s_value = df_s_value.iloc[1:].astype(float)
+        # df_s_value.index = df_s_key.iloc[1:].values
+        #mix_s = pd.DataFrame(index=df_s.index, data=df_s_value.to_dict())
+        #mix_s = mix_s * demand
+        colors={
+            'solar':'gold',
+            'onwind':'steelblue',
+            'onwind2':'royalblue',
+            'offwind':'lightblue',
+            'offwind2':'cyan',
+            'rooftop-solar':'orange',
+            'csp':'coral',
+            'solar thermal':'lightcoral',
+            'biomass':'green',
+            'solid biomass':'green',
+            'hydro':'midnightblue',
+            'ror':'slateblue',
+            'nuclear':'greenyellow',
+            'coal':'brown',
+            'OCGT':'red',
+            'CCGT':'darkred',
+            'oil':'grey',
+            'biogas':'lawngreen',
+            'gas':'crimson'
+        }
+        
+        df_s_shares.plot.bar(stacked=True, ax=ax[idx_s], color=df_s_shares.columns.map(colors))
+
+        ax[idx_s].set_ylabel('Energy share [MWh]')
+        
+        h, l = ax[idx_s].get_legend_handles_labels()
+        #ax[idx_s].legend(bbox_to_anchor=(0.6,1.3), ncol=3, handles=h[:int(len(h)/3)], labels=l[:int(len(l)/3)])
+        ax[idx_s].legend(bbox_to_anchor=(1,1.3), ncol=3, handles=h, labels=l)
+
+def plot_mps(df):
+    df = df.reset_index()
+
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "Helvetica"
+    })
+    plt.rc('text.latex', preamble=r'\usepackage{cmbright}')
+    fig, axs = plt.subplots(len(df.year.unique()), 1)
+    fig.set_size_inches(12, 4*len(df.year.unique()))
+
+    color_dict = {'elec': '#005b7f', 'h2':'#b2d235', 'NZ':'#b2d235'}
+    marker_dict = {'BS': '^', 'AP':'s', 'NZ':'o'}
+    scen_dict = {'BS': 'Conservative', 'AP':'Realistic', 'NZ':'Optimistic'}
+
+    for i, y in enumerate(df.year.unique()):
+        
+        if len(df.year.unique()) > 1:
+            ax = axs[i]
+        else:
+            ax = axs
+        df_y = df.loc[df.year == y]
+        if (y == 2050):
+            df_y = df_y.loc[df_y.export_quantity <= 3000]
+
+        
+        min_elec = df_y[['export_quantity', 'elec_wap']].groupby('export_quantity', as_index=False).min(numeric_only=True)
+        max_elec = df_y[['export_quantity', 'elec_wap']].groupby('export_quantity', as_index=False).max(numeric_only=True)
+
+        min_h2 = df_y[['export_quantity', 'h2_wap']].groupby('export_quantity').min(numeric_only=True)/33.3*1e3
+        max_h2 = df_y[['export_quantity', 'h2_wap']].groupby('export_quantity').max(numeric_only=True)/33.3*1e3
+
+        plots1 = []
+        plots2 = []
+        for s in df_y.scenario.unique():
+            df_y_s = df_y.loc[df_y.scenario == s]
+            df_y_s = df_y_s.set_index('export_quantity')
+            ax.scatter(df_y_s.index, df_y_s.elec_wap, label=scen_dict[s], color=color_dict['elec'], marker=marker_dict[s])#, linestyle='dashed', linewidth=0.8)
+            ax.scatter(df_y_s.index, df_y_s.h2_wap/33.3*1e3, label=scen_dict[s], color=color_dict['h2'], marker=marker_dict[s])#, linestyle='dashed', linewidth=0.8)
+
+
+            ax.fill_between(min_elec.export_quantity, min_elec.elec_wap, max_elec.elec_wap, color=color_dict['elec'], alpha=.1)
+            ax.fill_between(min_h2.index, min_h2.h2_wap, max_h2.h2_wap, color=color_dict['h2'], alpha=.1)
+            ax.set_ylim((0, max(max_h2.h2_wap.max(), max_elec.elec_wap.max())))
+            ax.tick_params(axis='both', which='major', labelsize=20)
+            if (y == 2030):
+                ax.set_xticklabels([])
+                ax.legend(loc='upper left', fontsize=10, ncol=3)
+                h, l = ax.get_legend_handles_labels()
+                leg1 = ax.legend(handles=[i for i in h[0::2]], labels=[i for i in l[0::2]], loc='upper right', fontsize=18, title=r'\huge\textbf{Electricity}', bbox_to_anchor=(0.3, 1.6))
+                ax.legend(handles=[i for i in h[1::2]], labels=[i for i in l[1::2]], loc='upper right', fontsize=18, title=r'\huge\textbf{Hydrogen}', bbox_to_anchor=(1, 1.6))
+                ax.add_artist(leg1)
+            else:
+                ax.set_xlabel(r'\textbf{Export quantity [TWh]}', fontsize=20)
+
+            ax.set_title(y, fontdict={'size':20})
+            fig.text(0.05, 0.5, r'\textbf{Average prices [€/MWh]}', va='center', rotation='vertical', fontsize=20)
