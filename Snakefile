@@ -127,6 +127,7 @@ rule add_export:
         shapes_path=pypsaearth(
             "resources/bus_regions/regions_onshore_elec_s{simpl}_{clusters}.geojson"
         ),
+        ee_reduction_ptx = "resources/custom_data/ee_reduction_ptx_{planning_horizons}.csv",
     output:
         RDIR
         + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
