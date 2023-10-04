@@ -19,6 +19,7 @@ data/industry_sector_ratios_NZ_2030.csv
 /networks
 /benchmarks
 /logs
+/outputs/*
 #/notebooks
 /data/links_p_nom.csv
 /data/*totals.csv
