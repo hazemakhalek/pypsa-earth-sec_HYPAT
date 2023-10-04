@@ -5,28 +5,28 @@ results_dir: results/
 summary_dir: results/
 costs_dir: data/ #TODO change to the equivalent of technology data
 
-run: BR_2050_FINAL_flat_heat_2
+run: UA_2030_hourly_09082023
 
 foresight: overnight
 
 scenario:
   simpl: # only relevant for PyPSA-Eur
-  - ""
+  - ''
   clusters: # number of nodes in Europe, any integer between 37 (1 node per country-zone) and several hundred
-  - 257
+  - 251
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
-  - 2050
+  - 2030
   ll:
-  - "v1.25"
+  - c1.0
   opts:
-  - "Co2L"
+  - Co2L
   sopts:
-  - "3H"
+  - 3H
   demand:
-  - "NZ"
+  - BS
 
 policy_config:
-  policy: "H2_export_monthly_constraint" #either "H2_export_yearly_constraint", "H2_export_monthly_constraint", "no_res_matching" # TODO check wether "export" is required here or misleading
+  policy: H2_export_monthly_constraint   #either "H2_export_yearly_constraint", "H2_export_monthly_constraint", "no_res_matching" # TODO check wether "export" is required here or misleading
   #allowed_excess: 3 # currently only implemented for the monthly constraint
   reference_case: true
   allowed_excess: 1.0
@@ -34,37 +34,43 @@ policy_config:
 clustering_options:
   alternative_clustering: true
 
-countries: ['BR']
+countries: [UA]
 
-H2_network: true
-H2_network_limit: 80000 #GWkm Mean pipeline length 242 km
+H2_network: false
+H2_network_limit: 0 #GWkm Mean pipeline length 174 km    x 20
 
 fossil_reserves:
-  oil: 21582 #TWh Maybe reduntant
+  oil: 215820 #TWh Maybe reduntant    ????????
 
-hydrogen_underground_storage: true
+hydrogen_underground_storage: false
 
 
 export:
-  h2export: [0] #[1, 10, 50, 1000] # 2030: 0, 1, 10, 50, 1000 Yearly export demand in TWh, 2050: 10, 100, 500, 3000
+  h2export_all_quantities: [0, 1, 10, 50, 86]
+  h2export:      # 2030: 1, 10, 50, 86 Yearly export demand in TWh, 2050: 10, 100, 500, 668
+  - 10
+  - 50
+  - 86
+  export_delivery: none    # 'none', 'monthly', 'weekly', 'daily', 'bidaily', 'hourly'
 
 custom_data:
-  renewables: ['csp', 'rooftop-solar', 'solar', 'onwind', 'onwind2', 'offwind', 'offwind2'] # ['csp', 'rooftop-solar', 'solar']
+  renewables: [csp, rooftop-solar, solar, onwind, onwind2, offwind, offwind2]               # ['csp', 'rooftop-solar', 'solar']
   elec_demand: true
   heat_demand: true
   industry_demand: true
   transport_demand: true
   water_costs: true
-  h2_underground: true
-  add_existing: true
-  existing_params: {"run": "BR_2030_FINAL_flat_heat_2", "H": 3, "clusters": 147, "year": 2030, "rate": "0.071", "demand": "NZ"}
+  h2_underground: false
+  add_existing: false
+  existing_params: {run: UA_2030_e_nom_max_qty_over_52, H: 3, clusters: 154, year: 2030,
+    rate: '0.219', demand: BS}
   custom_sectors: true
   gas_grid: true
 
 costs:
   lifetime: 25 #default lifetime
   # From a Lion Hirth paper, also reflects average of Noothout et al 2016
-  discountrate: [0.045]   #HYPAT: 2030 Optimistic 0.071, Realistic	0.076, Conservative	0.175; 2050 Optimistic	0.045, Realistic	0.086, Conservative	0.0175
+  discountrate: [0.219]   #HYPAT: 2030 Optimistic 0.098, Realistic	0.11, Conservative	0.219; 2050 Optimistic	0.045, Realistic	0.159, Conservative	0.219
   # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501
   USD2013_to_EUR2013: 0.7532
 
@@ -141,7 +147,7 @@ solar_thermal:
     azimuth: 180.
 
 sector:
-  co2_emission_limit: 0. #2005: 820000 Gg CO2e, 2030: 410000 Gg CO2 and 2050: 164000 Gg according to UN <--> Mtons 333.82 according to methodology 262
+  co2_emission_limit: 156 #Mt 
   gas_network: true
   oil_network: true
   district_heating:
@@ -208,27 +214,27 @@ sector:
 
 
   land_transport_fuel_cell_share: # 1 means all FCEVs HERE
-    BS_2030: 0.004
-    AP_2030: 0.004
-    NZ_2030: 0.011
+    BS_2030: 0.002
+    AP_2030: 0.002
+    NZ_2030: 0.007
     DF_2030: 0.01
-    BS_2050: 0.054
-    AP_2050: 0.054
-    NZ_2050: 0.142
+    BS_2050: 0.048
+    AP_2050: 0.048
+    NZ_2050: 0.138
     DF_2050: 0.08
 
   land_transport_electric_share: # 1 means all EVs  # This leads to problems when non-zero HERE
-    BS_2030: 0.035
-    AP_2030: 0.035
-    NZ_2030: 0.072
+    BS_2030: 0.038
+    AP_2030: 0.038
+    NZ_2030: 0.078
     DF_2030: 0.01
-    BS_2050: 0.483
-    AP_2050: 0.483
-    NZ_2050: 0.793
+    BS_2050: 0.448
+    AP_2050: 0.448
+    NZ_2050: 0.800
     DF_2050: 0.011
 
   co2_network: true
-  co2_sequestration_potential: 65 #https://www.sciencedirect.com/science/article/pii/S1750583621002553: 0 in 2030 and 65 in 2050, median of expert interviews : 40Mt in 2048 and 190 Mt in 2060
+  co2_sequestration_potential: 0 #https://www.sciencedirect.com/science/article/pii/S1750583621002553: 0 in 2030 and 65 in 2050, median of expert interviews : 40Mt in 2048 and 190 Mt in 2060
   co2_sequestration_cost: 10 #EUR/tCO2 for sequestration of CO2
   hydrogen_underground_storage: true
   shipping_hydrogen_liquefaction: false
@@ -239,9 +245,9 @@ sector:
     AP_2030: 0.05
     NZ_2030: 0.10
     DF_2030: 0.05
-    BS_2050: 0.203
-    AP_2050: 0.203
-    NZ_2050: 0.456
+    BS_2050: 0.202
+    AP_2050: 0.202
+    NZ_2050: 0.450
     DF_2050: 0.12
 
   gadm_level: 1
@@ -249,10 +255,10 @@ sector:
   marginal_cost_storage: 0
   methanation: true
   helmeth: true
-  dac: true
+  dac: false
   SMR: false
   cc_fraction: 0.9
-  cc: true
+  cc: false
 
   conventional_generation: # generator : carrier
     OCGT: gas
@@ -261,9 +267,9 @@ sector:
 # snapshots are originally set in PyPSA-Earth/config.yaml but used again by PyPSA-Earth-Sec
 snapshots:
   # arguments to pd.date_range
-  start: "2013-01-01"
-  end: "2014-01-01"
-  closed: "left" # end is not inclusive
+  start: '2013-01-01'
+  end: '2014-01-01'
+  closed: left   # end is not inclusive
 
 # atlite:
 #   cutout: ./cutouts/africa-2013-era5.nc
@@ -348,28 +354,28 @@ plotting:
   - solar thermal collector
   - central solar thermal collector
   tech_colors:
-    SMR CC: "darkblue"
-    gas for industry CC: "brown"
-    process emissions CC: "gray"
-    CO2 pipeline: "gray"
-    onwind: "dodgerblue"
-    onwind2: "dodgerblue"
-    onshore wind: "#235ebc"
-    offwind: "#6895dd"
-    offwind2: "#6895dd"
-    offshore wind: "#6895dd"
-    offwind-ac: "c"
-    offshore wind (AC): "#6895dd"
-    offwind-dc: "#74c6f2"
-    offshore wind (DC): "#74c6f2"
+    SMR CC: darkblue
+    gas for industry CC: brown
+    process emissions CC: gray
+    CO2 pipeline: gray
+    onwind: dodgerblue
+    onwind2: dodgerblue
+    onshore wind: '#235ebc'
+    offwind: '#6895dd'
+    offwind2: '#6895dd'
+    offshore wind: '#6895dd'
+    offwind-ac: c
+    offshore wind (AC): '#6895dd'
+    offwind-dc: '#74c6f2'
+    offshore wind (DC): '#74c6f2'
     wave: '#004444'
     hydro: '#3B5323'
     hydro reservoir: '#3B5323'
     ror: '#78AB46'
     run of river: '#78AB46'
-    hydroelectricity: 'blue'
-    solar: "orange"
-    solar PV: "#f9d002"
+    hydroelectricity: blue
+    solar: orange
+    solar PV: '#f9d002'
     solar thermal: coral
     csp: coral
     solar rooftop: '#ffef60'
@@ -379,7 +385,7 @@ plotting:
     gas boiler: '#ee8340'
     gas boilers: '#ee8340'
     gas boiler marginal: '#ee8340'
-    gas-to-power/heat: 'brown'
+    gas-to-power/heat: brown
     gas: brown
     natural gas: brown
     SMR: '#4F4F2F'
@@ -410,14 +416,14 @@ plotting:
     heat pump: '#76EE00'
     air heat pump: '#76EE00'
     ground heat pump: '#40AA00'
-    power-to-heat: 'red'
+    power-to-heat: red
     resistive heater: pink
     Sabatier: '#FF1493'
     methanation: '#FF1493'
-    power-to-gas: 'purple'
-    power-to-liquid: 'darkgreen'
+    power-to-gas: purple
+    power-to-liquid: darkgreen
     helmeth: '#7D0552'
-    DAC: 'deeppink'
+    DAC: deeppink
     co2 stored: '#123456'
     CO2 sequestration: '#123456'
     CC: k
@@ -479,15 +485,17 @@ plotting:
     solid biomass: '#DAA520'
     today: '#D2691E'
     shipping: '#6495ED'
-    shipping oil: "#6495ED"
-    shipping oil emissions: "#6495ED"
-    electricity distribution grid: 'y'
+    shipping oil: '#6495ED'
+    shipping oil emissions: '#6495ED'
+    electricity distribution grid: y
     solid biomass transport: green
-    H2 for industry: "#222222"
-    H2 for shipping: "#6495ED"
-    biomass EOP: "green"
-    biomass: "green"
-    agriculture oil: "#1e1e1e"
+    H2 for industry: '#222222'
+    H2 for shipping: '#6495ED'
+    biomass EOP: green
+    biomass: green
+    agriculture oil: '#1e1e1e'
     rail transport electricity: darkgrey
     rail transport oil: '#44DD33'
     biomass emissions: '#888888'
+    industry coal emissions: '#FF00FF'
+    industry gas emissions: '#800080'
