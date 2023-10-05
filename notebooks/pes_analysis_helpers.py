@@ -81,10 +81,11 @@ def calc_generation(n, tech='all'):
     hydro_gen = n.storage_units_t.p.sum().sum() / 1e6 * n.snapshot_weightings.iloc[0,0]
     gen_agg.loc['hydro'] = [hydro_gen]
 
-    link_gen_pps = n.links.filter(regex=('OCGT|biomass EOP'), axis=0)
+    link_gen_pps = n.links.filter(regex=('OCGT|biomass EOP|CHP'), axis=0)#n.links.loc[n.links.bus1.str.contains('_AC$', regex=True)]
+    #link_gen_pps = n.links.loc[n.links.bus1.str.contains('_AC$', regex=True)]
     link_gen = -n.links_t.p1[link_gen_pps.index] / 1e6 * n.snapshot_weightings.iloc[0,0]
     link_gen.columns = link_gen_pps.carrier
-    link_gen = link_gen.rename({'biomass EOP':'biomass', 'OCGT':'OCGT'}, axis=1)
+    link_gen = link_gen.rename({'biomass EOP':'biomass', 'OCGT':'OCGT', 'urban central gas CHP':'gas_CHP', 'urban central solid biomass CHP':'biomass_CHP'}, axis=1)
     link_gen = link_gen.T.groupby(link_gen.T.index).sum().T
     for c in link_gen.columns:
         if c in gen_agg.index:
@@ -477,6 +478,7 @@ def calc_elec_mix(n):
     mix = mix/mix.sum()
     return mix.squeeze()
 
+
 def calc_energy_mix(n):
     gens = n.generators_t.p / 1e6 * 3
     gens.columns = n.generators.loc[gens.columns, 'carrier'].str.strip()#.apply(rename_techs_tyndp)
@@ -498,57 +500,6 @@ def calc_energy_mix(n):
     
     return gens.squeeze()
 
-def plot_energy_mix(df):
-    df = df.reset_index()
-    fig, ax = plt.subplots(1,3)
-    fig.set_size_inches(20, 6)
-
-    #demand = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity']).ac_demand
-    for (idx_s,s) in enumerate(df.scenario.unique()):
-        df_s = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity'])[['energy_mix_abs']]
-        df_s_tech = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: s.split('   ')[0]))
-        df_s_shares = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split('   ')[-1])))
-        df_s_shares.columns = df_s_tech.iloc[0].values
-        df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
-        df_s_shares = df_s_shares.T.sort_values(by=(df_s_shares.index.get_level_values(0)[0], s, 0), ascending=False).T
-
-        # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
-        # df_s_value = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[-1])
-        # df_s_value = df_s_value.iloc[1:].astype(float)
-        # df_s_value.index = df_s_key.iloc[1:].values
-        #mix_s = pd.DataFrame(index=df_s.index, data=df_s_value.to_dict())
-        #mix_s = mix_s * demand
-        colors={
-            'solar':'gold',
-            'onwind':'steelblue',
-            'onwind2':'royalblue',
-            'offwind':'lightblue',
-            'offwind2':'cyan',
-            'rooftop-solar':'orange',
-            'csp':'coral',
-            'solar thermal':'lightcoral',
-            'biomass':'green',
-            'solid biomass':'green',
-            'hydro':'midnightblue',
-            'ror':'slateblue',
-            'nuclear':'greenyellow',
-            'coal':'brown',
-            'OCGT':'red',
-            'CCGT':'darkred',
-            'oil':'grey',
-            'biogas':'lawngreen',
-            'gas':'crimson'
-        }
-        
-        df_s_shares.plot.bar(stacked=True, ax=ax[idx_s], color=df_s_shares.columns.map(colors))
-
-        ax[idx_s].set_ylabel('Energy share [MWh]')
-        
-        h, l = ax[idx_s].get_legend_handles_labels()
-        #ax[idx_s].legend(bbox_to_anchor=(0.6,1.3), ncol=3, handles=h[:int(len(h)/3)], labels=l[:int(len(l)/3)])
-        ax[idx_s].legend(bbox_to_anchor=(1,1.3), ncol=3, handles=h, labels=l)
-
-
 def calc_pipeline_cap(n):
     pipelines = n.links.filter(like='H2 pipeline', axis=0)
     pipeline_capa = pipelines.p_nom_opt * pipelines.length
@@ -561,6 +512,8 @@ def calc_emissions(n):
 def create_summary_df(run_name):
     summary = pd.DataFrame()
     path = os.getcwd()+'/pypsa-earth-sec/results/{}/postnetworks'.format(run_name)
+    exp_ports_all = []
+
     for f in os.listdir(path):
         n_path = path+'/{}'.format(f)
         q = int(f.split('_')[-1].split('e')[0])
@@ -597,12 +550,15 @@ def create_summary_df(run_name):
         if q == 0:
             hydrogen_wap_exp = 0
             exp_shares = pd.Series(np.zeros(len(exp_ports)), index=exp_ports)
+            exp_ports_all = exp_ports
         else:
             hydrogen_wap_exp = calc_wap_h2_exp(n)
-            exp_shares = calc_export_shares(n)
+            exp_shares = pd.Series(np.zeros(len(exp_ports_all)), index=exp_ports_all)
+            exp_shares_val = calc_export_shares(n)
+            exp_shares.loc[exp_shares_val.index] = exp_shares_val.values
         exp_dict = {}
 
-        for exp_p in exp_ports:
+        for exp_p in exp_ports_all:
             exp_dict[exp_p+' share'] = exp_shares[exp_p]
             node = exp_p.split(' ')[0]
             exp_dict[exp_p+ ' solar cap'] = n.generators.loc[(n.generators.bus == node) & (n.generators.carrier == 'solar'), 'p_nom_opt'].item()
@@ -613,8 +569,9 @@ def create_summary_df(run_name):
             exp_dict[exp_p+' csp cap'] = n.generators.loc[(n.generators.bus == node) & (n.generators.carrier == 'csp'), 'p_nom_opt'].item()
             exp_dict[exp_p+' rooftop-solar cap'] = n.generators.loc[(n.generators.bus == node) & (n.generators.carrier == 'rooftop-solar'), 'p_nom_opt'].item()
 
-            exp_dict[exp_p+' electrolyzer cap'] = n.links.filter(like=node, axis=0).loc[n.links.carrier == 'H2 Electrolysis', 'p_nom_opt'].item()
-            exp_dict[exp_p+' electrolyzer cf'] = n.links_t.p0.filter(like=node).filter(like='Electrolysis').sum().sum()*3 / (exp_dict[exp_p+' electrolyzer cap'] * 8760)
+            if exp_p in exp_ports:
+                exp_dict[exp_p+' electrolyzer cap'] = n.links.filter(like=node, axis=0).loc[n.links.carrier == 'H2 Electrolysis', 'p_nom_opt'].item()
+                exp_dict[exp_p+' electrolyzer cf'] = n.links_t.p0.filter(like=node).filter(like='Electrolysis').sum().sum()*3 / (exp_dict[exp_p+' electrolyzer cap'] * 8760)
 
         #renewable capacities
         solar_cap = n.generators.loc[n.generators.carrier == 'solar', 'p_nom_opt'].sum()
@@ -637,8 +594,8 @@ def create_summary_df(run_name):
         uhs_cap = calc_uhs_capa(n)
 
         #electricity and energy mix
-        elec_mix = calc_elec_mix(n).to_string() #relative
-        ener_mix = calc_energy_mix(n).to_string() #TWh
+        elec_mix = calc_elec_mix(n).sort_index().to_string() #relative
+        ener_mix = calc_energy_mix(n).sort_index().to_string() #TWh
 
         #emissions
         emissions = calc_emissions(n) /1e6 #Mt
@@ -1145,8 +1102,13 @@ def plot_elec_mix(df):
         df_s = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity'])[['electricity_mix_rel']]
         df_s_tech = df_s.electricity_mix_rel.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: s.split(' ')[0]))
         df_s_shares = df_s.electricity_mix_rel.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split(' ')[-1])*100))
+        # mix_dict = {}
+        # for q in df_s_shares.iterrows():
+            
+        # elec_mix = pd.DataFrame(index=df_s_shares.index, columns=df_s_tech.iloc[0].values)
         df_s_shares.columns = df_s_tech.iloc[0].values
         df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
+        df_s_shares = df_s_shares.T.sort_values(by=(df_s_shares.index.get_level_values(0)[0], s, 0), ascending=False).T
 
         # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
         # df_s_value = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[-1])
@@ -1169,7 +1131,9 @@ def plot_elec_mix(df):
             'coal':'brown',
             'OCGT':'red',
             'CCGT':'darkred',
-            'oil':'grey'
+            'oil':'grey',
+            'gas_CHP':'crimson',
+            'biomass_CHP':'lawngreen',
         }
         
         df_s_shares.plot.bar(stacked=True, ax=ax[idx_s], color=df_s_shares.columns.map(colors))
@@ -1192,7 +1156,7 @@ def plot_energy_mix(df):
         df_s_shares = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split('   ')[-1])))
         df_s_shares.columns = df_s_tech.iloc[0].values
         df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
-        df_s_shares.columns = df_s_shares.columns[df_s_shares.iloc[-1].argsort()]
+        df_s_shares = df_s_shares.T.sort_values(by=(df_s_shares.index.get_level_values(0)[0], s, 0), ascending=False).T
 
         # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
         # df_s_value = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[-1])
