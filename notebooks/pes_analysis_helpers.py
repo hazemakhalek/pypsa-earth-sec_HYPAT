@@ -1154,7 +1154,7 @@ def plot_energy_mix(df):
         df_s_tech = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: s.split('   ')[0]))
         df_s_shares = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split('   ')[-1])))
         df_s_shares.columns = df_s_tech.iloc[0].values
-        df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
+        df_s_shares = df_s_shares[df_s_shares > 0.01].dropna(axis=1)
         df_s_shares = df_s_shares.T.sort_values(by=(df_s_shares.index.get_level_values(0)[0], s, 0), ascending=False).T
 
         # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
