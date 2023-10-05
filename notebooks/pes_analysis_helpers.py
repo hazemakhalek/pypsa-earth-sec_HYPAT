@@ -477,6 +477,26 @@ def calc_elec_mix(n):
     mix = mix/mix.sum()
     return mix.squeeze()
 
+def calc_energy_mix(n):
+    gens = n.generators_t.p / 1e6 * 3
+    gens.columns = n.generators.loc[gens.columns, 'carrier'].str.strip()#.apply(rename_techs_tyndp)
+    gens = gens.T.groupby(gens.columns).sum().T
+
+    gens_hydro = n.storage_units_t.p_dispatch / 1e6 * 3
+    gens_hydro.columns = n.storage_units.loc[gens_hydro.columns, 'carrier'].str.strip()#.apply(rename_techs_tyndp)
+    gens_hydro = gens_hydro.T.groupby(gens_hydro.columns).sum().T
+
+    gen_stor = n.stores_t.p.filter(regex='biomass|oil|biogas|gas Store') / 1e6 * 3
+    gen_stor.columns = n.stores.loc[gen_stor.columns,'carrier'].str.strip()#.apply(rename_techs_tyndp)
+
+    gen_stor = gen_stor.T.groupby(gen_stor.columns).sum().T#.drop('CCS', axis=1)
+
+    gens = pd.concat([gens, gens_hydro, gen_stor.clip(lower=0)]).fillna(0)
+    gens = gens.T.groupby(gens.T.index).sum().T
+    gens = gens.groupby(gens.index).sum()
+    gens = gens.sum()
+    
+    return gens.squeeze()
 
 def plot_energy_mix(df):
     df = df.reset_index()
