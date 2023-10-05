@@ -478,26 +478,56 @@ def calc_elec_mix(n):
     return mix.squeeze()
 
 
-def calc_energy_mix(n):
-    gens = n.generators_t.p / 1e6 * 3
-    gens.columns = n.generators.loc[gens.columns, 'carrier'].str.strip()#.apply(rename_techs_tyndp)
-    gens = gens.T.groupby(gens.columns).sum().T
+def plot_energy_mix(df):
+    df = df.reset_index()
+    fig, ax = plt.subplots(1,3)
+    fig.set_size_inches(20, 6)
 
-    gens_hydro = n.storage_units_t.p_dispatch / 1e6 * 3
-    gens_hydro.columns = n.storage_units.loc[gens_hydro.columns, 'carrier'].str.strip()#.apply(rename_techs_tyndp)
-    gens_hydro = gens_hydro.T.groupby(gens_hydro.columns).sum().T
+    #demand = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity']).ac_demand
+    for (idx_s,s) in enumerate(df.scenario.unique()):
+        df_s = df.loc[df.scenario == s].set_index(['year', 'scenario', 'export_quantity'])[['energy_mix_abs']]
+        df_s_tech = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: s.split('   ')[0]))
+        df_s_shares = df_s.energy_mix_abs.apply(lambda m: pd.Series(m.split('\n')[1:]).apply(lambda s: float(s.split('   ')[-1])))
+        df_s_shares.columns = df_s_tech.iloc[0].values
+        df_s_shares = df_s_shares[df_s_shares > 0.5].dropna(axis=1)
+        df_s_shares = df_s_shares.T.sort_values(by=(df_s_shares.index.get_level_values(0)[0], s, 0), ascending=False).T
 
-    gen_stor = n.stores_t.p.filter(regex='biomass|oil|biogas|gas Store') / 1e6 * 3
-    gen_stor.columns = n.stores.loc[gen_stor.columns,'carrier'].str.strip()#.apply(rename_techs_tyndp)
+        # #df_s_key = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[0])
+        # df_s_value = pd.Series(summary_res.electricity_mix_rel.iloc[0].split('\n')).apply(lambda s: s.split(' ')[-1])
+        # df_s_value = df_s_value.iloc[1:].astype(float)
+        # df_s_value.index = df_s_key.iloc[1:].values
+        #mix_s = pd.DataFrame(index=df_s.index, data=df_s_value.to_dict())
+        #mix_s = mix_s * demand
+        colors={
+            'solar':'gold',
+            'onwind':'steelblue',
+            'onwind2':'royalblue',
+            'offwind':'lightblue',
+            'offwind2':'cyan',
+            'rooftop-solar':'orange',
+            'csp':'coral',
+            'solar thermal':'lightcoral',
+            'biomass':'green',
+            'solid biomass':'green',
+            'hydro':'midnightblue',
+            'ror':'slateblue',
+            'nuclear':'greenyellow',
+            'coal':'brown',
+            'OCGT':'red',
+            'CCGT':'darkred',
+            'oil':'grey',
+            'biogas':'lawngreen',
+            'gas':'crimson'
+        }
+        
+        df_s_shares.plot.bar(stacked=True, ax=ax[idx_s], color=df_s_shares.columns.map(colors))
 
-    gen_stor = gen_stor.T.groupby(gen_stor.columns).sum().T#.drop('CCS', axis=1)
+        ax[idx_s].set_ylabel('Energy share [MWh]')
+        
+        h, l = ax[idx_s].get_legend_handles_labels()
+        #ax[idx_s].legend(bbox_to_anchor=(0.6,1.3), ncol=3, handles=h[:int(len(h)/3)], labels=l[:int(len(l)/3)])
+        ax[idx_s].legend(bbox_to_anchor=(1,1.3), ncol=3, handles=h, labels=l)
 
-    gens = pd.concat([gens, gens_hydro, gen_stor.clip(lower=0)]).fillna(0)
-    gens = gens.T.groupby(gens.T.index).sum().T
-    gens = gens.groupby(gens.index).sum()
-    gens = gens.sum()
-    
-    return gens.squeeze()
 
 def calc_pipeline_cap(n):
     pipelines = n.links.filter(like='H2 pipeline', axis=0)
