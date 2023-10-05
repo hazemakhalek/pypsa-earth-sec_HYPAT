@@ -776,7 +776,7 @@ def plot_electrolyzer_caps(elec_cap):
         fig.set_size_inches(8, 6)
 
         df_y = df.loc[df.year == y].drop('year', axis=1)
-        df_y['electrolyzer_cap'] = df_y.filter(like='electrolyzer cap').sum(axis=1)
+        df_y['electrolyzer_cap'] = df_y.electrolyzer_cap - df_y.filter(like='electrolyzer cap').sum(axis=1)
         df_y.rename({'electrolyzer_cap':'Electrolyzer capacity in other nodes'}, inplace=True, axis=1)
         df_y.set_index(['scenario', 'export_quantity']).plot.bar(stacked=True, ax=ax, cmap='spring_r')
 
