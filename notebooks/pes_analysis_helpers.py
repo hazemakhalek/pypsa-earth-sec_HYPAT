@@ -541,6 +541,8 @@ def calc_emissions(n):
 def create_summary_df(run_name):
     summary = pd.DataFrame()
     path = os.getcwd()+'/pypsa-earth-sec/results/{}/postnetworks'.format(run_name)
+    exp_ports_all = []
+
     for f in os.listdir(path):
         n_path = path+'/{}'.format(f)
         q = int(f.split('_')[-1].split('e')[0])
@@ -577,12 +579,15 @@ def create_summary_df(run_name):
         if q == 0:
             hydrogen_wap_exp = 0
             exp_shares = pd.Series(np.zeros(len(exp_ports)), index=exp_ports)
+            exp_ports_all = exp_ports
         else:
             hydrogen_wap_exp = calc_wap_h2_exp(n)
-            exp_shares = calc_export_shares(n)
+            exp_shares = pd.Series(np.zeros(len(exp_ports_all)), index=exp_ports_all)
+            exp_shares_val = calc_export_shares(n)
+            exp_shares.loc[exp_shares_val.index] = exp_shares_val.values
         exp_dict = {}
 
-        for exp_p in exp_ports:
+        for exp_p in exp_ports_all:
             exp_dict[exp_p+' share'] = exp_shares[exp_p]
             node = exp_p.split(' ')[0]
             exp_dict[exp_p+ ' solar cap'] = n.generators.loc[(n.generators.bus == node) & (n.generators.carrier == 'solar'), 'p_nom_opt'].item()
@@ -593,8 +598,10 @@ def create_summary_df(run_name):
             exp_dict[exp_p+' csp cap'] = n.generators.loc[(n.generators.bus == node) & (n.generators.carrier == 'csp'), 'p_nom_opt'].item()
             exp_dict[exp_p+' rooftop-solar cap'] = n.generators.loc[(n.generators.bus == node) & (n.generators.carrier == 'rooftop-solar'), 'p_nom_opt'].item()
 
-            exp_dict[exp_p+' electrolyzer cap'] = n.links.filter(like=node, axis=0).loc[n.links.carrier == 'H2 Electrolysis', 'p_nom_opt'].item()
-            exp_dict[exp_p+' electrolyzer cf'] = n.links_t.p0.filter(like=node).filter(like='Electrolysis').sum().sum()*3 / (exp_dict[exp_p+' electrolyzer cap'] * 8760)
+            if exp_p in exp_ports:
+                exp_dict[exp_p+' electrolyzer cap'] = n.links.filter(like=node, axis=0).loc[n.links.carrier == 'H2 Electrolysis', 'p_nom_opt'].item()
+                exp_dict[exp_p+' electrolyzer cf'] = n.links_t.p0.filter(like=node).filter(like='Electrolysis').sum().sum()*3 / (exp_dict[exp_p+' electrolyzer cap'] * 8760)
+                exp_dict[exp_p+' H2_WAP'] = (n.buses_t.marginal_price[exp_p.strip(' export')] * n.links_t.p0[exp_p]).sum() / n.links_t.p0[exp_p].sum() * 33.3 / 1e3
 
         #renewable capacities
         solar_cap = n.generators.loc[n.generators.carrier == 'solar', 'p_nom_opt'].sum()
@@ -617,8 +624,8 @@ def create_summary_df(run_name):
         uhs_cap = calc_uhs_capa(n)
 
         #electricity and energy mix
-        elec_mix = calc_elec_mix(n).to_string() #relative
-        ener_mix = calc_energy_mix(n).to_string() #TWh
+        elec_mix = calc_elec_mix(n).sort_index().to_string() #relative
+        ener_mix = calc_energy_mix(n).sort_index().to_string() #TWh
 
         #emissions
         emissions = calc_emissions(n) /1e6 #Mt
@@ -895,6 +902,83 @@ def plot_h2_exports(ns, summary, sample_rate='W', scenario='AP'):
     #plt.savefig('../outputs_{}/Hydrogen_delivery_{}.png'.format(run[2050], scen_dict[s]), bbox_inches='tight')
     return(None)
 
+
+def plot_h2_export_prices(ns, summary, sample_rate='W', scenario='AP'):
+    summary = summary.reset_index()
+    summary = summary.loc[summary.export_quantity > 0]
+    ex_quantities={2030: list(summary.loc[summary.year ==2030, 'export_quantity'].unique()),
+                    2050: list(summary.loc[summary.year ==2050, 'export_quantity'].unique())} # , 2050: [10, 100, 500, 1000, 3000]
+    scen_dict={'BS':'Conservative', 'AP':'Realistic', 'NZ':'Optimistic'}
+
+    fig, ax = plt.subplots(5, len(summary.year.unique()), figsize=(12, 10))
+
+    keys_list = list(ex_quantities.keys())
+
+    exp_h2_dict = {}
+
+    for year, quantities in ex_quantities.items():
+        position_x =  keys_list.index(year)
+        for (idx,q) in enumerate(quantities):
+            position_y = quantities.index(q)
+            n = ns[year][scenario][q]
+
+            ex_buses = n.links.loc[n.links.bus1 == 'H2 export bus'].bus0
+            mp_exp_ports = n.buses_t.marginal_price[ex_buses]
+            mp_exp_bus = n.buses_t.marginal_price.filter(like='export')
+            ex_prices = pd.concat([mp_exp_ports, mp_exp_bus], axis=1)
+            ex_prices = ex_prices.resample('D').mean()
+            
+            # links = n.links
+            # links_t = n.links_t
+
+            # exp_h2_links = n.links.loc[links.bus1 == 'H2 export bus']
+            # exp_h2_links_ts = links_t.p0[exp_h2_links.index] * n.snapshot_weightings.iloc[0,0] / 1e3
+            # exp_h2_links_ts = exp_h2_links_ts.resample(sample_rate).sum()      # .sum() .mean()
+
+            exp_h2_dict['{} {} {} TWh'.format(year, scen_dict[scenario], q)] = ex_prices
+
+            #exp_h2_links_ts.rename(columns=ports, inplace=True)
+
+            if len(summary.year.unique()) > 1:
+                ex_prices.plot(ax=ax[position_y, position_x], linewidth=0.8)
+
+                # Set the title
+                ax[position_y, position_x].set_title('{} {} {} TWh'.format(year, scen_dict[scenario], q))
+                ax[position_y, position_x].legend(bbox_to_anchor=(1, 2))
+                if idx > 0:
+                    ax[position_y, position_x].legend(bbox_to_anchor=(1,0.5)).set_visible(False)  # Hide the legend for the first subplot
+                ax[position_y, position_x].set_xlabel('')  # Hide the x-label
+            else:
+                ex_prices.plot(ax=ax[position_y], linewidth=0.8)
+
+                # Set the title
+                ax[position_y].set_title('{} {} {} TWh'.format(year, scen_dict[scenario], q))
+                # ax[position_y].legend(bbox_to_anchor=(1, 2))
+                if idx > 0:
+                    ax[position_y].legend().set_visible(False)  # Hide the legend for the first subplot
+                ax[position_y].set_xlabel('')  # Hide the x-label 
+
+    if len(summary.year.unique()) > 1:
+        handles, labels = ax[position_y, position_x].get_legend_handles_labels()
+    else:
+        handles, labels = ax[position_y].get_legend_handles_labels()
+    fig.legend(handles, labels, bbox_to_anchor=(0.8, 1), ncol=5)
+
+    # Modify the legend labels
+    # new_labels = ['Pecem (BR.6)', 'Aratu (BR.5)', 'Itaguai (BR.19)', 'Rio Grande (BR.21)']
+    # new_labels = exp_h2_links_ts.columns.to_list()
+    # fig.legend(new_labels, bbox_to_anchor=(0.8, 0.95), ncol=4)
+
+    # Set the y-label for the whole figure
+    fig.text(0.05, 0.5, 'Hydrogen prices at export locations and at artificial export bus with weekly resampling [€/MWh]', va='center', rotation='vertical', fontdict={'fontsize': 14})
+
+    # Adjust the spacing between subplots
+    plt.subplots_adjust(wspace=0.3)  # Adjust the width spacing between subplots
+    plt.subplots_adjust(hspace=0.6)  # Adjust the height spacing between subplots
+
+    # plt.savefig('../outputs/Hydrogen_delivery_{}.png'.format(scen_dict[s]), bbox_inches='tight')
+    #plt.savefig('../outputs_{}/Hydrogen_delivery_{}.png'.format(run[2050], scen_dict[s]), bbox_inches='tight')
+    return(None)
 
 def make_legend_circles_for(sizes, scale=1.0, **kw):
     return [Circle((0, 0), radius=(s / scale) ** 0.5, **kw) for s in sizes]
@@ -1267,3 +1351,4 @@ def plot_mps(df):
 
             ax.set_title(y, fontdict={'size':20})
             fig.text(0.05, 0.5, r'\textbf{Average prices [€/MWh]}', va='center', rotation='vertical', fontsize=20)
+
