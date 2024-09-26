@@ -102,18 +102,18 @@ if __name__ == "__main__":
 
     regions = gpd.read_file(snakemake.input.regions_onshore)
 
-    if regions["name"][0][
-        :3
-    ].isalpha():  # TODO clean later by changing all codes to 2 letters
-        regions["name"] = regions["name"].apply(
-            lambda name: three_2_two_digits_country(name[:3]) + name[3:]
-        )
+    # if regions["name"][0][
+    #     :3
+    # ].isalpha():  # TODO clean later by changing all codes to 2 letters
+    #     regions["name"] = regions["name"].apply(
+    #         lambda name: three_2_two_digits_country(name[:3]) + name[3:]
+    #     )
 
     geo_locs = pd.read_csv(
         snakemake.input.industrial_database,
         sep=",",
         header=0,
-        keep_default_na=False,  # , index_col=0
+        keep_default_na=False, na_values=[""] # , index_col=0
     )
 
     gadm_clustering = snakemake.config["clustering_options"]["alternative_clustering"]

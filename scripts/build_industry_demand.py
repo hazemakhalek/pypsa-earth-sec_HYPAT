@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # Load production per country tomorrow
     prod_tom_path = snakemake.input.industrial_production_per_country_tomorrow
     production_tom = pd.read_csv(
-        prod_tom_path, header=0, index_col=0, keep_default_na=False
+        prod_tom_path, header=0, index_col=0, keep_default_na=False, na_values=[""]
     )
 
     # to_drop=production_tom.sum()[production_tom.sum()==0].index
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     # Transfromation key to map the material demand to the corresponding carrier demand
     industry_sector_ratios = pd.read_csv(
-        snakemake.input.industry_sector_ratios, index_col=0
+        snakemake.input.industry_sector_ratios, index_col=0, keep_default_na=False, na_values=[""]
     )
 
     if snakemake.config["custom_data"]["industry_demand"]:

@@ -72,7 +72,8 @@ def prepare_heat_data(n):
     )
 
     intraday_profiles = pd.read_csv(
-        snakemake.input.heat_profile, index_col=0
+        snakemake.input.heat_profile, index_col=0,keep_default_na=False,
+        na_values=[""]
     )  # TODO GHALAT
 
     sectors = ["residential", "services"]

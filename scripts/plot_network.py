@@ -234,45 +234,45 @@ def plot_h2_infra(network):
         ax=ax,
         boundaries=(-75, -33, -35, 6),
     )
-
-    subregions = gpd.read_file(
-        "/nfs/home/cas96273/Thesis_Code/outputs/shapes_uhs.geojson"
-    )
-    subregions_uhs = subregions.loc[subregions.uhs_1000_delta != 0]
-    subregions_uhs[["uhs_0", "uhs_1000_delta"]] = (
-        subregions_uhs[["uhs_0", "uhs_1000_delta"]] / 1e6
-    )
-
-    if uhs == "no_export":
-        vmin, vmax, vcenter = subregions_uhs.uhs_0.min(), subregions_uhs.uhs_0.max(), 0
-        span = vmax - vmin
-        cmap = cm.get_cmap("spring_r")
-        # cmap[:, -1] = np.linspace(0, 1, cmap.N)
-        norm = colors.Normalize(vmin=vmin, vmax=vmax)
-        cbar = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-        cax = fig.add_axes([0.85, 0.1, 0.03, 0.8])
-        cbr = fig.colorbar(cbar, cax=cax)
-        cbr.set_alpha(0.2)
-        cbr.draw_all()
-        cbr.ax.tick_params(labelsize=12)
-        cbr.set_label("UHS expansion in TWh", fontsize=15)
-    elif uhs == "1000_export":
-        vmin, vmax, vcenter = (
-            subregions_uhs.uhs_1000_delta.min(),
-            subregions_uhs.uhs_1000_delta.max(),
-            0,
+    # underground hydrogen storage potential
+    if snakemake.config["hydrogen_underground_storage"]:
+        shapes_uhs = "/nfs/home/cas96273/Thesis_Code/outputs/shapes_uhs.geojson"
+        subregions = gpd.read_file(shapes_uhs)
+        subregions_uhs = subregions.loc[subregions.uhs_1000_delta != 0]
+        subregions_uhs[["uhs_0", "uhs_1000_delta"]] = (
+            subregions_uhs[["uhs_0", "uhs_1000_delta"]] / 1e6
         )
-        v_abs = max(abs(vmin), abs(vmax))
-        norm = colors.TwoSlopeNorm(vmin=-v_abs, vcenter=vcenter, vmax=v_abs)
-        # create a normalized colorbar
-        cmap = cm.get_cmap("PRGn")
-        cbar = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-        cax = fig.add_axes([0.85, 0.1, 0.03, 0.8])
-        cbr = fig.colorbar(cbar, cax=cax)
-        cbr.ax.tick_params(labelsize=12)
-        cbr.set_label("UHS capacity deviation", fontsize=15)
-        cbr.set_alpha(0.8)
-        cbr.draw_all()
+
+        if uhs == "no_export":
+            vmin, vmax, vcenter = subregions_uhs.uhs_0.min(), subregions_uhs.uhs_0.max(), 0
+            span = vmax - vmin
+            cmap = cm.get_cmap("spring_r")
+            # cmap[:, -1] = np.linspace(0, 1, cmap.N)
+            norm = colors.Normalize(vmin=vmin, vmax=vmax)
+            cbar = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+            cax = fig.add_axes([0.85, 0.1, 0.03, 0.8])
+            cbr = fig.colorbar(cbar, cax=cax)
+            cbr.set_alpha(0.2)
+            cbr.draw_all()
+            cbr.ax.tick_params(labelsize=12)
+            cbr.set_label("UHS expansion in TWh", fontsize=15)
+        elif uhs == "1000_export":
+            vmin, vmax, vcenter = (
+                subregions_uhs.uhs_1000_delta.min(),
+                subregions_uhs.uhs_1000_delta.max(),
+                0,
+            )
+            v_abs = max(abs(vmin), abs(vmax))
+            norm = colors.TwoSlopeNorm(vmin=-v_abs, vcenter=vcenter, vmax=v_abs)
+            # create a normalized colorbar
+            cmap = cm.get_cmap("PRGn")
+            cbar = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+            cax = fig.add_axes([0.85, 0.1, 0.03, 0.8])
+            cbr = fig.colorbar(cbar, cax=cax)
+            cbr.ax.tick_params(labelsize=12)
+            cbr.set_label("UHS capacity deviation", fontsize=15)
+            cbr.set_alpha(0.8)
+            cbr.draw_all()
 
     handles = make_legend_circles_for(
         [5000, 1000], scale=bus_size_factor, facecolor=bus_color
@@ -425,7 +425,7 @@ def plot_transmission_topology(network):
     n.links.bus0 = n.links.bus0.str.replace(" H2", "")
     n.links.bus1 = n.links.bus1.str.replace(" H2", "")
 
-    n.lines.append(DC_lines[["bus0", "bus1"]])
+    n.lines._append(DC_lines[["bus0", "bus1"]])
 
     n.madd("Line", names=DC_lines.index, bus0=DC_lines.bus0, bus1=DC_lines.bus1)
 
@@ -752,8 +752,8 @@ def plot_map(
     l3 = ax.legend(
         handles,
         labels,
-        loc="upper right",
-        # bbox_to_anchor=(0.32, 1.01),
+        #loc="center right",
+        bbox_to_anchor=(1, 0.8),
         framealpha=1,
         labelspacing=0.8,
         handletextpad=1.5,
