@@ -90,6 +90,8 @@ def add_export(n, hydrogen_buses_ports, export_profile):
         bus1="H2 export bus",
         p_nom_extendable=True,
     )
+    if snakemake.params.constant_nodal_export:
+        n.links.loc[n.links.index.str.contains("export"), "p_min_pu"] = 1
 
     export_links = n.links[n.links.index.str.contains("export")]
     logger.info(export_links)

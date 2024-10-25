@@ -2,10 +2,19 @@
 
 micromamba activate pypsa-earth
 
+cp config.bright_BI_ref.yaml config.yaml
+snakemake --profile slurm all
+
 cp config.bright_BI.yaml config.yaml
 snakemake --profile slurm all
 
+cp config.bright_DE_ref.yaml config.yaml
+snakemake --profile slurm all
+
 cp config.bright_DE.yaml config.yaml
+snakemake --profile slurm all
+
+cp config.bright_GH_ref.yaml config.yaml
 snakemake --profile slurm all
 
 cp config.bright_GH.yaml config.yaml
