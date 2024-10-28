@@ -286,7 +286,7 @@ rule prepare_res_potentials:
         ),
     output:
         **{
-            f"{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{{simpl}}_{{clusters}}.csv"
+            f"{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -294,7 +294,7 @@ rule prepare_res_potentials:
             for clusters in config["scenario"]["clusters"]
         },
         **{
-            f"{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{{simpl}}_{{clusters}}.csv"
+            f"{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -312,7 +312,7 @@ rule override_respot:
         countries=config["countries"],
     input:
         **{
-            f"custom_res_pot_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{{simpl}}_{{clusters}}.csv"
+            f"custom_res_pot_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -320,7 +320,7 @@ rule override_respot:
             for clusters in config["scenario"]["clusters"]
         },
         **{
-            f"custom_res_ins_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{{simpl}}_{{clusters}}.csv"
+            f"custom_res_ins_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
