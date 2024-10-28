@@ -52,7 +52,8 @@ wildcard_constraints:
     sopts="[-+a-zA-Z0-9\.\s]*",
     discountrate="[-+a-zA-Z0-9\.\s]*",
     demand="[-+a-zA-Z0-9\.\s]*",
-    h2export="[0-9]+m?|all",
+    h2export="[0-9]+m?|all|endogenous",
+    h2mp="[0-9]+([.,][0-9]+)?|all|endogenous",
     planning_horizons="20[2-9][0-9]|2100",
 
 
@@ -115,7 +116,7 @@ rule solve_all_networks:
     input:
         expand(
             RDIR
-            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             **config["scenario"],
             **config["costs"],
             **config["export"]
@@ -265,7 +266,7 @@ rule add_export:
         ),
     output:
         RDIR
-        + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+        + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
     script:
         "scripts/add_export.py"
 
@@ -602,28 +603,28 @@ if config["foresight"] == "overnight":
             # network=RDIR
             # + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}.nc",
             network=RDIR
-            + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             costs=CDIR + "costs_{planning_horizons}.csv",
             configs=SDIR + "/configs/config.yaml",  # included to trigger copy_config rule
         output:
             RDIR
-            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
         shadow:
             "shallow"
         log:
             solver=RDIR
-            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_solver.log",
+            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_solver.log",
             python=RDIR
-            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_python.log",
+            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_python.log",
             memory=RDIR
-            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_memory.log",
+            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_memory.log",
         threads: 25
         resources:
             mem_mb=config["solving"]["mem"],
         benchmark:
             (
                 RDIR
-                + "/benchmarks/solve_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export"
+                + "/benchmarks/solve_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp"
             )
         script:
             "scripts/solve_network.py"
@@ -643,7 +644,7 @@ rule make_summary:
         overrides="data/override_component_attrs",
         networks=expand(
             RDIR
-            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             **config["scenario"],
             **config["costs"],
             **config["export"]
@@ -651,49 +652,49 @@ rule make_summary:
         costs=CDIR + "costs_{planning_horizons}.csv",
         plots=expand(
             RDIR
-            + "/maps/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}-costs-all_{planning_horizons}_{discountrate}_{demand}_{h2export}export.pdf",
+            + "/maps/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}-costs-all_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.pdf",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
     output:
         nodal_costs=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/nodal_costs.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/nodal_costs.csv",
         nodal_capacities=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/nodal_capacities.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/nodal_capacities.csv",
         nodal_cfs=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/nodal_cfs.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/nodal_cfs.csv",
         cfs=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/cfs.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/cfs.csv",
         costs=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/costs.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/costs.csv",
         capacities=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/capacities.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/capacities.csv",
         curtailment=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/curtailment.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/curtailment.csv",
         energy=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/energy.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/energy.csv",
         supply=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/supply.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/supply.csv",
         supply_energy=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/supply_energy.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/supply_energy.csv",
         prices=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/prices.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/prices.csv",
         weighted_prices=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/weighted_prices.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/weighted_prices.csv",
         market_values=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/market_values.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/market_values.csv",
         price_statistics=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/price_statistics.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/price_statistics.csv",
         metrics=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/metrics.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/metrics.csv",
     threads: 2
     resources:
         mem_mb=10000,
     benchmark:
         (
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/benchmarks/make_summary"
+            + "/benchmarks/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/make_summary"
         )
     script:
         "scripts/make_summary.py"
@@ -703,17 +704,17 @@ rule plot_network:
     input:
         overrides="data/override_component_attrs",
         network=RDIR
-        + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+        + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
     output:
         map=RDIR
-        + "/maps/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}-costs-all_{planning_horizons}_{discountrate}_{demand}_{h2export}export.pdf",
+        + "/maps/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}-costs-all_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.pdf",
     threads: 2
     resources:
         mem_mb=10000,
     benchmark:
         (
             RDIR
-            + "/benchmarks/plot_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export"
+            + "/benchmarks/plot_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp"
         )
     script:
         "scripts/plot_network.py"
@@ -722,25 +723,25 @@ rule plot_network:
 rule plot_summary:
     input:
         costs=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/costs.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/costs.csv",
         energy=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/energy.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/energy.csv",
         balances=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/supply_energy.csv",
+        + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/supply_energy.csv",
     output:
         costs=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/graphs/costs.pdf",
+        + "/graphs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/costs.pdf",
         energy=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/graphs/energy.pdf",
+        + "/graphs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/energy.pdf",
         balances=SDIR
-        + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/graphs/balances-energy.pdf",
+        + "/graphs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/balances-energy.pdf",
     threads: 2
     resources:
         mem_mb=10000,
     benchmark:
         (
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/benchmarks/plot_summary"
+            + "/benchmarks/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/plot_summary"
         )
     script:
         "scripts/plot_summary.py"
@@ -770,17 +771,17 @@ rule prepare_db:
         tech_colors=config["plotting"]["tech_colors"],
     input:
         network=RDIR
-        + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+        + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
     output:
         db=RDIR
-        + "/summaries/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}-costs-all_{planning_horizons}_{discountrate}_{demand}_{h2export}export.csv",
+        + "/summaries/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}-costs-all_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.csv",
     threads: 2
     resources:
         mem_mb=10000,
     benchmark:
         (
             RDIR
-            + "/benchmarks/prepare_db/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export"
+            + "/benchmarks/prepare_db/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp"
         )
     script:
         "scripts/prepare_db.py"
@@ -946,7 +947,7 @@ if config["foresight"] == "myopic":
             costs=config["costs"],
         input:
             network=RDIR
-            + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             powerplants=pypsaearth("resources/" + RDIR_PE + "powerplants.csv"),
             busmap_s=pypsaearth(
                 "resources/" + RDIR_PE + "bus_regions/busmap_elec_s{simpl}.csv"
@@ -964,7 +965,7 @@ if config["foresight"] == "myopic":
             existing_heating_distribution="resources/heating/existing_heating_distribution_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
         output:
             RDIR
-            + "/prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
         wildcard_constraints:
             # TODO: The first planning_horizon needs to be aligned across scenarios
             # snakemake does not support passing functions to wildcard_constraints
@@ -975,10 +976,10 @@ if config["foresight"] == "myopic":
             mem_mb=2000,
         log:
             RDIR
-            + "/logs/add_existing_baseyear_elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.log",
+            + "/logs/add_existing_baseyear_elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.log",
         benchmark:
             RDIR
-            +"/benchmarks/add_existing_baseyear/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export"
+            +"/benchmarks/add_existing_baseyear/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp"
         script:
             "scripts/add_existing_baseyear.py"
 
@@ -1000,7 +1001,7 @@ if config["foresight"] == "myopic":
             RDIR
             + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_"
             + planning_horizon_p
-            + "_{discountrate}_{demand}_{h2export}export.nc"
+            + "_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc"
         )
 
     rule add_brownfield:
@@ -1024,24 +1025,24 @@ if config["foresight"] == "myopic":
                 + "bus_regions/busmap_elec_s{simpl}_{clusters}.csv"
             ),
             network=RDIR
-            + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/prenetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             network_p=solved_previous_horizon,  #solved network at previous time step
             costs=CDIR + "costs_{planning_horizons}.csv",
             cop_soil_total="resources/cops/cop_soil_total_elec_s{simpl}_{clusters}_{planning_horizons}.nc",
             cop_air_total="resources/cops/cop_air_total_elec_s{simpl}_{clusters}_{planning_horizons}.nc",
         output:
             RDIR
-            + "/prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
         threads: 4
         resources:
             mem_mb=10000,
         log:
             RDIR
-            + "/logs/add_brownfield_elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.log",
+            + "/logs/add_brownfield_elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.log",
         benchmark:
             (
                 RDIR
-                + "/benchmarks/add_brownfield/elec_s{simpl}_ec_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export"
+                + "/benchmarks/add_brownfield/elec_s{simpl}_ec_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp"
             )
         script:
             "./scripts/add_brownfield.py"
@@ -1059,30 +1060,30 @@ if config["foresight"] == "myopic":
         input:
             overrides="data/override_component_attrs",
             network=RDIR
-            + "/prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             costs=CDIR + "costs_{planning_horizons}.csv",
             configs=SDIR + "/configs/config.yaml",  # included to trigger copy_config rule
         output:
             network=RDIR
-            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
             # config=RDIR
-            # + "/configs/config.elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.yaml",
+            # + "/configs/config.elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.yaml",
         shadow:
             "shallow"
         log:
             solver=RDIR
-            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_solver.log",
+            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_solver.log",
             python=RDIR
-            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_python.log",
+            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_python.log",
             memory=RDIR
-            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_memory.log",
+            + "/logs/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_memory.log",
         threads: 25
         resources:
             mem_mb=config["solving"]["mem"],
         benchmark:
             (
                 RDIR
-                + "/benchmarks/solve_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export"
+                + "/benchmarks/solve_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp"
             )
         script:
             "./scripts/solve_network.py"
@@ -1091,7 +1092,7 @@ if config["foresight"] == "myopic":
         input:
             networks=expand(
                 RDIR
-                + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+                + "/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp.nc",
                 **config["scenario"],
                 **config["costs"],
                 **config["export"],
@@ -1102,126 +1103,126 @@ rule all:
     input:
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/nodal_costs.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/nodal_costs.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/nodal_capacities.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/nodal_capacities.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/nodal_cfs.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/nodal_cfs.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/cfs.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/cfs.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/costs.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/costs.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/capacities.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/capacities.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/curtailment.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/curtailment.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/energy.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/energy.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/supply.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/supply.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/supply_energy.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/supply_energy.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/prices.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/prices.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/weighted_prices.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/weighted_prices.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/market_values.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/market_values.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/price_statistics.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/price_statistics.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/csvs/metrics.csv",
+            + "/csvs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/metrics.csv",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/graphs/costs.pdf",
+            + "/graphs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/costs.pdf",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/graphs/energy.pdf",
+            + "/graphs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/energy.pdf",
             **config["scenario"],
             **config["costs"],
             **config["export"]
         ),
         expand(
             SDIR
-            + "/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export/graphs/balances-energy.pdf",
+            + "/graphs/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp/balances-energy.pdf",
             **config["scenario"],
             **config["costs"],
             **config["export"]
