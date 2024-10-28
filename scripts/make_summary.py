@@ -642,6 +642,7 @@ def make_summaries(networks_dict):
             "discount_rate",
             "demand",
             "export",
+            "h2mp",
         ],
     )
 
@@ -707,9 +708,10 @@ if __name__ == "__main__":
             snakemake.wildcards["discountrate"],
             snakemake.wildcards["demand"],
             snakemake.wildcards["h2export"],
+            snakemake.wildcards["h2mp"],
         ): snakemake.params.results_dir
         + snakemake.params.run["name"]
-        + f"/postnetworks/elec_s{snakemake.wildcards['simpl']}_{snakemake.wildcards['clusters']}_ec_l{snakemake.wildcards['ll']}_{snakemake.wildcards['opts']}_{snakemake.wildcards['sopts']}_{snakemake.wildcards['planning_horizons']}_{snakemake.wildcards['discountrate']}_{snakemake.wildcards['demand']}_{snakemake.wildcards['h2export']}export.nc"
+        + f"/postnetworks/elec_s{snakemake.wildcards['simpl']}_{snakemake.wildcards['clusters']}_ec_l{snakemake.wildcards['ll']}_{snakemake.wildcards['opts']}_{snakemake.wildcards['sopts']}_{snakemake.wildcards['planning_horizons']}_{snakemake.wildcards['discountrate']}_{snakemake.wildcards['demand']}_{snakemake.wildcards['h2export']}export_{snakemake.wildcards['h2mp']}mp.nc"
     }
 
     print(networks_dict)

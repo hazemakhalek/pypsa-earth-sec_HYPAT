@@ -90,6 +90,8 @@ def add_export(n, hydrogen_buses_ports, export_profile):
         bus1="H2 export bus",
         p_nom_extendable=True,
     )
+    if snakemake.params.constant_nodal_export:
+        n.links.loc[n.links.index.str.contains("export"), "p_min_pu"] = 1
 
     export_links = n.links[n.links.index.str.contains("export")]
     logger.info(export_links)
@@ -123,20 +125,40 @@ def add_export(n, hydrogen_buses_ports, export_profile):
     elif snakemake.params.store == False:
         pass
 
-    # add load
-    n.add(
-        "Load",
-        "H2 export load",
-        bus="H2 export bus",
-        carrier="H2",
-        p_set=export_profile,
-    )
+    if (
+        snakemake.wildcards.h2mp != "endogenous"
+        and snakemake.wildcards.h2export == "endogenous"
+    ):
+        # add negative generator to export bus with global H2 market price as remuneration
+        n.add(
+            "Generator",
+            "H2 export",
+            bus="H2 export bus",
+            carrier="H2",
+            p_nom_extendable=True,
+            capital_cost=0,
+            marginal_cost=snakemake.wildcards["h2mp"],
+            p_min_pu=-1,
+            p_max_pu=0,
+        )
+    else:
+        # add load
+        n.add(
+            "Load",
+            "H2 export load",
+            bus="H2 export bus",
+            carrier="H2",
+            p_set=export_profile,
+        )
 
     return
 
 
 def create_export_profile():
     """This function creates the export profile based on the annual export demand and resamples it to temp resolution obtained from the wildcard"""
+
+    if snakemake.wildcards.h2export == "endogenous":
+        return None
 
     export_h2 = eval(snakemake.wildcards["h2export"]) * 1e6  # convert TWh to MWh
 

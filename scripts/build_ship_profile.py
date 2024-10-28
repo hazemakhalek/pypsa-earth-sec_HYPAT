@@ -73,10 +73,13 @@ if __name__ == "__main__":
 
     # Get parameters from config and wildcard
     ship_opts = snakemake.params.ship_opts
-    export_volume = eval(snakemake.wildcards.h2export)
+    if snakemake.wildcards.h2export != "endogenous":
+        export_volume = eval(snakemake.wildcards.h2export)
+    else:
+        export_volume = "endogenous"
 
     # Create export profile
-    if export_volume > 0:
+    if export_volume != "endogenous" and export_volume > 0:
         export_profile = build_ship_profile(export_volume, ship_opts)
     else:
         export_profile = pd.Series(
