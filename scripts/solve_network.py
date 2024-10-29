@@ -301,7 +301,7 @@ def hydrogen_temporal_constraint(n, n_ref, time_period):
             res_ref_store = (
                 n_ref.storage_units_t.p_dispatch[res_stor_index] * weightings_stor
             )
-            res_ref = pd.concat([res_ref_gen, res_ref_store])
+            res_ref = pd.concat([res_ref_gen, res_ref_store], axis=1)
         else:
             res_ref = res_ref_gen
 
@@ -502,7 +502,7 @@ def constrain_smr_dispatch(n, n_ref):
         # lhs = get_var(n, "Link", "p")[unit]
         lhs = linexpr((1, get_var(n, "Link", "p")[unit]))
         rhs = p0_ref  # .loc[t]
-
+        logger.info("adding SMR constraint for {}".format(unit))
         # Add the constraint: p0 in 'n' must be less than or equal to the reference case
         define_constraints(n, lhs, "<=", rhs, f"smr_p0_limit_{unit}")
 
@@ -636,10 +636,11 @@ if __name__ == "__main__":
             ll="v1.0",
             opts="Co2L",
             planning_horizons="2035",
-            sopts="876H",
+            sopts="3H",
             discountrate=0.071,
-            demand="GH",
-            h2export="10",
+            demand="BI",
+            h2export="0",
+            h2mp="endogenous",
         )
 
         sets_path_to_root("pypsa-earth-sec")
