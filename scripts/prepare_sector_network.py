@@ -847,7 +847,7 @@ def add_biomass(n, costs):
             p_nom_extendable=False,
             p_min_pu=p_minmax_pu,
             p_max_pu=p_minmax_pu,
-            capital_cost=costs.at["BtL", "fixed"] * costs.at["BtL", "efficiency"],
+            capital_cost=0,  # costs.at["BtL", "fixed"] * costs.at["BtL", "efficiency"],
             marginal_cost=costs.at["BtL", "VOM"] * costs.at["BtL", "efficiency"],
         )
 
