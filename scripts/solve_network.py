@@ -80,6 +80,12 @@ def prepare_network(n, solve_opts=None):
     #     pass
     # n.carriers.co2_emissions = n.carriers.co2_emissions * 1e-6
     # n.global_constraints.at["CO2Limit", "constant"] = n.global_constraints.at["CO2Limit", "constant"] * 1e-6
+
+    # modify electrolyzer capital costs
+    n.links.loc[n.links.carrier == "H2 Electrolysis", "capital_cost"] *= float(
+        snakemake.wildcards.electrolyzer_cc
+    )
+
     if "lv_limit" in n.global_constraints.index:
         n.line_volume_limit = n.global_constraints.at["lv_limit", "constant"]
         n.line_volume_limit_dual = n.global_constraints.at["lv_limit", "mu"]
@@ -636,11 +642,12 @@ if __name__ == "__main__":
             ll="v1.0",
             opts="Co2L",
             planning_horizons="2035",
-            sopts="3H",
+            sopts="876H",
             discountrate=0.071,
             demand="BI",
             h2export="0",
             h2mp="endogenous",
+            electrolyzer_cc=1.0,
         )
 
         sets_path_to_root("pypsa-earth-sec")
