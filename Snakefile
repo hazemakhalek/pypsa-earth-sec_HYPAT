@@ -287,7 +287,7 @@ rule prepare_res_potentials:
         ),
     output:
         **{
-            f"{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{{simpl}}_{{clusters}}.csv"
+            f"{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -295,7 +295,7 @@ rule prepare_res_potentials:
             for clusters in config["scenario"]["clusters"]
         },
         **{
-            f"{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{{simpl}}_{{clusters}}.csv"
+            f"{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -313,7 +313,7 @@ rule override_respot:
         countries=config["countries"],
     input:
         **{
-            f"custom_res_pot_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{{simpl}}_{{clusters}}.csv"
+            f"custom_res_pot_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_potential_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -321,7 +321,7 @@ rule override_respot:
             for clusters in config["scenario"]["clusters"]
         },
         **{
-            f"custom_res_ins_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{{simpl}}_{{clusters}}.csv"
+            f"custom_res_ins_{tech}_{year}_{discountrate}_s{simpl}_{clusters}": f"resources/custom_renewables/{tech}/{tech}_{year}_{discountrate}_installable_s{simpl}_{clusters}.csv"
             for tech in config["custom_data"]["renewables"]
             for year in config["scenario"]["planning_horizons"]
             for discountrate in config["costs"]["discountrate"]
@@ -622,7 +622,7 @@ if config["foresight"] == "overnight":
             mem_mb=config["solving"]["mem"],
         benchmark:
             RDIR
-            + "/benchmarks/solve_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc"
+            +"/benchmarks/solve_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc"
         script:
             "scripts/solve_network.py"
 
@@ -690,7 +690,7 @@ rule make_summary:
         mem_mb=10000,
     benchmark:
         SDIR
-        + "/benchmarks/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc/make_summary"
+        +"/benchmarks/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc/make_summary"
     script:
         "scripts/make_summary.py"
 
@@ -708,7 +708,7 @@ rule plot_network:
         mem_mb=10000,
     benchmark:
         RDIR
-        + "/benchmarks/plot_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc"
+        +"/benchmarks/plot_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc"
     script:
         "scripts/plot_network.py"
 
@@ -733,7 +733,7 @@ rule plot_summary:
         mem_mb=10000,
     benchmark:
         SDIR
-        + "/benchmarks/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc/plot_summary"
+        +"/benchmarks/{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_{h2mp}mp_{electrolyzer_cc}ecc/plot_summary"
     script:
         "scripts/plot_summary.py"
 
@@ -1217,4 +1217,4 @@ rule all:
             **config["scenario"],
             **config["costs"],
             **config["export"]
-        )
+        ),
