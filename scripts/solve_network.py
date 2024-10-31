@@ -680,6 +680,11 @@ if __name__ == "__main__":
             != "no_res_matching"
         ):
             n_ref_path = snakemake.config["policy_config"]["hydrogen"]["path_to_ref"]
+            n_ref_path = (
+                n_ref_path[:-3]
+                + f"_{snakemake.wildcards.electrolyzer_cc}"
+                + n_ref_path[-3:]
+            )
             n_ref = pypsa.Network(n_ref_path)
         else:
             n_ref = None
