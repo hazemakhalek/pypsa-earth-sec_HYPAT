@@ -113,7 +113,7 @@ costs: # Costs used in PyPSA-Earth-Sec. Year depends on the wildcard planning_ho
     H2: 0.
     battery: 0.
 
-  electrolyzer_cc: [0.7,1.0,1.3]
+  electrolyzer_cc: [0.7, 1.0, 1.3]
 
   emission_prices: # only used with the option Ep (emission prices)
     co2: 0.
