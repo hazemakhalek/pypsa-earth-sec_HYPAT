@@ -30,7 +30,7 @@ scenario:
   sopts:
   - "3H"
   demand:
-  - "BI" # BI/DE/GH
+  - ["BI", "DE", "GH"] # BI/DE/GH
 
 policy_config:
   hydrogen:
@@ -113,7 +113,7 @@ costs: # Costs used in PyPSA-Earth-Sec. Year depends on the wildcard planning_ho
     H2: 0.
     battery: 0.
 
-  electrolyzer_cc: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+  electrolyzer_cc: [0.7, 1.0, 1.3]
 
   emission_prices: # only used with the option Ep (emission prices)
     co2: 0.

@@ -30,7 +30,7 @@ scenario:
   sopts:
   - "3H"
   demand:
-  - "GH" # BI/DE/GH
+  - ["BI", "DE", "GH"] # BI/DE/GH
 
 policy_config:
   hydrogen:
@@ -40,7 +40,7 @@ policy_config:
     allowed_excess: 1.0
     is_reference: false # Whether or not this network is a reference case network, relevant only if additionality is _true_
     remove_h2_load: false #Whether or not to remove the h2 load from the network, relevant only if is_reference is _true_
-    path_to_ref: "/scratch/htc/cschauss/BRIGHT/submodules/pypsa-earth-sec/results/241031_electrolyzer_cc_sensitivity/postnetworks/elec_s_11_ec_lv1.0_Co2L_3H_2035_0.071_GH_0export_endogenousmp.nc" # Path to the reference case network for additionality calculation, relevant only if additionality is _true_ and is_reference is _false_
+    path_to_ref: "/scratch/htc/cschauss/BRIGHT/submodules/pypsa-earth-sec/results/241031_electrolyzer_cc_sensitivity/postnetworks/elec_s_11_ec_lv1.0_Co2L_3H_2035_0.071_scenario_0export_endogenousmp.nc" # Path to the reference case network for additionality calculation, relevant only if additionality is _true_ and is_reference is _false_
     limit_SMR_dispatch: true # Limits the dispatch of SMR to the reference case
     re_country_load: false # Set to "True" to force the RE electricity to be equal to the electricity required for hydrogen export and the country electricity load. "False" excludes the country electricity load from the constraint.
 
@@ -66,7 +66,7 @@ fossil_reserves:
 
 export:
   h2export: "endogenous" #,20,30,40,50,60,70,80,90,100] or "endogenous" in combination with h2mp # Yearly export demand in TWh
-  h2mp: [65, 67.5, 70, 72.5, 75, 77.5, 80, 82.5, 85, 87.5, 90] # Global hydrogen market price in EUR/MWh if h2export is set to endogenous
+  h2mp: [70, 90, 100, 110, 120] # Global hydrogen market price in EUR/MWh if h2export is set to endogenous
   store: false # [True, False] # specifies wether an export store to balance demand is implemented
   store_capital_costs: "no_costs" # ["standard_costs", "no_costs"] # specifies the costs of the export store. "standard_costs" takes CAPEX of "hydrogen storage tank type 1 including compressor"
   export_profile: "constant" # use "ship" or "constant"
@@ -91,8 +91,6 @@ custom_data:
   add_existing: false
   custom_sectors: false
   gas_network: false # If "True" then a custom .csv file must be placed in "resources/custom_data/pipelines.csv" , If "False" the user can choose btw "greenfield" or Model built-in datasets. Please refer to ["sector"] below.
-  biomass_to_oil_mobility: 0.72
-
   rename_industry_carriers: {"Electricity": "electricity", "Biofuels": "solid biomass", "Heat": "low-temperature heat", "Natural Gas": "gas", "Coal": "coal", "Hydrogen": "hydrogen", "Oil": "oil"}
 
 costs: # Costs used in PyPSA-Earth-Sec. Year depends on the wildcard planning_horizon in the scenario section
@@ -114,7 +112,7 @@ costs: # Costs used in PyPSA-Earth-Sec. Year depends on the wildcard planning_ho
     H2: 0.
     battery: 0.
 
-  electrolyzer_cc: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+  electrolyzer_cc: [0.7, 1.0, 1.3]
 
   emission_prices: # only used with the option Ep (emission prices)
     co2: 0.
@@ -367,6 +365,8 @@ sector:
     BI_2050: 0.433
     GH_2050: 0.093
     DE_2050: 0.123
+
+
 
   co2_network: true
   co2_sequestration_potential: 70 #MtCO2/a sequestration potential for Europe

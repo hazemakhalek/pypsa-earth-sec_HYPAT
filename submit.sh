@@ -1,23 +1,11 @@
 #!/bin/bash
 
-micromamba activate pypsa-earth
+conda activate pypsa-earth
 
-cp config.bright_BI_ref.yaml config.yaml
+cp config.bright_ref.yaml config.yaml
 snakemake --profile slurm all
 
-cp config.bright_BI.yaml config.yaml
-snakemake --profile slurm all
-
-cp config.bright_DE_ref.yaml config.yaml
-snakemake --profile slurm all
-
-cp config.bright_DE.yaml config.yaml
-snakemake --profile slurm all
-
-cp config.bright_GH_ref.yaml config.yaml
-snakemake --profile slurm all
-
-cp config.bright_GH.yaml config.yaml
+cp config.bright.yaml config.yaml
 snakemake --profile slurm all
 
 NEXTCLOUD_URL="https://tubcloud.tu-berlin.de/remote.php/webdav/BRIGHT/results/"
@@ -25,5 +13,5 @@ USERNAME="cpschau"
 PASSWORD=$(get_nextcloud_password)
 
 # Upload the file to Nextcloud via WebDAV
-tar -czf results_0925.tar.gz /results/092524_test/
-curl -u "$USERNAME:$PASSWORD" -T "results_0925.tar.gz" "$NEXTCLOUD_URL"
+tar -czf results_241031.tar.gz /results/241031/
+curl -u "$USERNAME:$PASSWORD" -T "results_241031.tar.gz" "$NEXTCLOUD_URL"
