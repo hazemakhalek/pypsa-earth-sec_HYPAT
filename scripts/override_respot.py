@@ -11,6 +11,7 @@ import pypsa
 import pytz
 import xarray as xr
 from helpers import mock_snakemake, override_component_attrs, sets_path_to_root
+from vresutils.costdata import annuity
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,19 @@ def override_values(tech, year, dr, simpl, clusters):
     else:
         existing_res = custom_res["installedcapacity"].values
 
+    def annuity_factor(v):
+        return (
+            annuity(v["lifetime"], snakemake.wildcards["discountrate"])
+            + v["fixedomEuroPKW"] / v["investmentEuroPKW"] / 100
+        )
+
+    Nyears = n.snapshot_weightings.generators.sum() / 8760
+
+    custom_res["fixed"] = [
+        annuity_factor(v) * v["investmentEuroPKW"] * Nyears
+        for i, v in custom_res.iterrows()
+    ]
+
     n.madd(
         "Generator",
         custom_res.index,
@@ -70,7 +84,7 @@ def override_values(tech, year, dr, simpl, clusters):
         p_nom_max=custom_res["p_nom_max"],
         # weight=ds["weight"].to_pandas(),
         # marginal_cost=custom_res["fixedomEuroPKW"].values * 1000,
-        capital_cost=custom_res["annualcostEuroPMW"],
+        capital_cost=custom_res["fixed"],
         efficiency=1.0,
         p_max_pu=custom_res_t,
         lifetime=custom_res["lifetime"],
@@ -86,11 +100,11 @@ if __name__ == "__main__":
             "override_respot",
             simpl="",
             clusters="11",
-            ll="v2.0",
+            ll="v1.0",
             opts="Co2L",
-            planning_horizons="2030",
-            sopts="144H",
-            demand="AB",
+            planning_horizons="2035",
+            sopts="3H",
+            demand="BI",
             discountrate=0.071,
         )
         sets_path_to_root("pypsa-earth-sec")
