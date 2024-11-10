@@ -212,6 +212,7 @@ def prepare_enertile(df, df_t):
         {
             "p_nom_max": "sum",
             "annualcostEuroPMW": "mean",
+            "investmentEuroPKW": "mean",
             "fixedomEuroPKW": "mean",
             "installedcapacity": "sum",
             "lifetime": "mean",
