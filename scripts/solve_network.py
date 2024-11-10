@@ -529,15 +529,18 @@ def fix_rooftopPV_utilityScale_ratio(n, target_ratio=2):
     rooftop_total = gen_var.loc[rooftop_index]
     utility_total = gen_var.loc[utility_index]
 
-
     # Define the constraint using linexpr, ensuring alignment by combining after summing
-    lhs =  linexpr((1,rooftop_total)).sum() + linexpr((-target_ratio,utility_total)).sum()
+    lhs = (
+        linexpr((1, rooftop_total)).sum()
+        + linexpr((-target_ratio, utility_total)).sum()
+    )
 
     # RHS is zero
     rhs = 0
 
     # Add the constraint to the model
     define_constraints(n, lhs, "==", rhs, "utility_to_rooftop_ratio_constraint")
+
 
 def extra_functionality(n, snapshots):
     add_battery_constraints(n)
@@ -587,8 +590,12 @@ def extra_functionality(n, snapshots):
     ):
         constrain_smr_dispatch(n, n_ref)
 
-    if snakemake.config["policy_config"]["renewables"]["ratio_rooftop_to_utility_solar"]:
-        fix_rooftopPV_utilityScale_ratio(n, snakemake.config["policy_config"]["ratio_rooftop_to_utility_solar"])
+    if snakemake.config["policy_config"]["renewables"][
+        "ratio_rooftop_to_utility_solar"
+    ]:
+        fix_rooftopPV_utilityScale_ratio(
+            n, snakemake.config["policy_config"]["ratio_rooftop_to_utility_solar"]
+        )
 
     add_co2_sequestration_limit(n, snapshots)
 
