@@ -43,7 +43,7 @@ policy_config:
     limit_SMR_dispatch: true # Limits the dispatch of SMR to the reference case
     re_country_load: false # Set to "True" to force the RE electricity to be equal to the electricity required for hydrogen export and the country electricity load. "False" excludes the country electricity load from the constraint.
   renewables:
-    ratio_rooftop_to_utility_solar: 2 # insert value to activate, leave empty to disable
+    ratio_rooftop_to_utility_solar:  # insert value to activate, leave empty to disable
 
 clustering_options:
   alternative_clustering: true
