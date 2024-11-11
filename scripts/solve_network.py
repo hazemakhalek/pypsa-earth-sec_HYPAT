@@ -513,6 +513,35 @@ def constrain_smr_dispatch(n, n_ref):
         define_constraints(n, lhs, "<=", rhs, f"smr_p0_limit_{unit}")
 
 
+def fix_rooftopPV_utilityScale_ratio(n, target_ratio=2):
+    logger.info(
+        f"Adding constraint to ensure the total rooftop solar capacity is {target_ratio} times the total utility-scale solar capacity."
+    )
+
+    # Filter for rooftop and utility-scale solar generators
+    rooftop_index = n.generators.loc[n.generators.carrier == "rooftop-solar"].index
+    utility_index = n.generators.loc[n.generators.carrier == "solar"].index
+
+    # Get the generator capacity variables (p_nom) for each generator type
+    gen_var = get_var(n, "Generator", "p_nom")
+
+    # Extract capacity values by index
+    rooftop_total = gen_var.loc[rooftop_index]
+    utility_total = gen_var.loc[utility_index]
+
+    # Define the constraint using linexpr, ensuring alignment by combining after summing
+    lhs = (
+        linexpr((1, rooftop_total)).sum()
+        + linexpr((-target_ratio, utility_total)).sum()
+    )
+
+    # RHS is zero
+    rhs = 0
+
+    # Add the constraint to the model
+    define_constraints(n, lhs, "==", rhs, "utility_to_rooftop_ratio_constraint")
+
+
 def extra_functionality(n, snapshots):
     add_battery_constraints(n)
 
@@ -560,6 +589,13 @@ def extra_functionality(n, snapshots):
         and not snakemake.config["policy_config"]["hydrogen"]["is_reference"]
     ):
         constrain_smr_dispatch(n, n_ref)
+
+    if snakemake.config["policy_config"]["renewables"][
+        "ratio_rooftop_to_utility_solar"
+    ]:
+        fix_rooftopPV_utilityScale_ratio(
+            n, snakemake.config["policy_config"]["ratio_rooftop_to_utility_solar"]
+        )
 
     add_co2_sequestration_limit(n, snapshots)
 
@@ -642,7 +678,7 @@ if __name__ == "__main__":
             ll="v1.0",
             opts="Co2L",
             planning_horizons="2035",
-            sopts="876H",
+            sopts="365H",
             discountrate=0.071,
             demand="BI",
             h2export="0",
