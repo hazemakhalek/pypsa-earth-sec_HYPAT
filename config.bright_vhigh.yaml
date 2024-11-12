@@ -98,7 +98,7 @@ costs: # Costs used in PyPSA-Earth-Sec. Year depends on the wildcard planning_ho
   version: v0.9.2
   lifetime: 25 #default lifetime
   # From a Lion Hirth paper, also reflects average of Noothout et al 2016
-  discountrate: [0.1] #, 0.086, 0.111]
+  discountrate: [0.12] #, 0.086, 0.111]
   # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501
   USD2013_to_EUR2013: 0.7532
 
