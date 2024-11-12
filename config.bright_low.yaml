@@ -43,7 +43,7 @@ policy_config:
     limit_SMR_dispatch: true # Limits the dispatch of SMR to the reference case
     re_country_load: false # Set to "True" to force the RE electricity to be equal to the electricity required for hydrogen export and the country electricity load. "False" excludes the country electricity load from the constraint.
   renewables:
-      ratio_rooftop_to_utility_solar:  # insert value to activate, leave empty to disable
+    ratio_rooftop_to_utility_solar:    # insert value to activate, leave empty to disable
 
 clustering_options:
   alternative_clustering: true
@@ -79,7 +79,7 @@ export:
     unload_time: 24 # hours for 48h see Hampp2021
 
 custom_data:
-  renewables_enertile: [ "solar-rooftop", "onwind", "onwind_rest", "solar"]
+  renewables_enertile: ["solar-rooftop", "onwind", "onwind_rest", "solar"]
   renewables: ["solar-rooftop", "onwind", "onwind2", "onwind3", "onwind4", "solar"] # ['csp', 'rooftop-solar', 'solar']
   energy_totals: true
   elec_demand: true
