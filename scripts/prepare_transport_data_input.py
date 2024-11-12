@@ -127,6 +127,9 @@ if __name__ == "__main__":
         shutil.copy(src, dest)
     else:
         # Join the DataFrames by the 'country' column
+        CO2_emissions_csv = CO2_emissions_csv[
+            ~CO2_emissions_csv["country"].apply(lambda x: isinstance(x, list))
+        ]
         merged_df = pd.merge(vehicles_csv, CO2_emissions_csv, on="country")
         merged_df = merged_df[["country", "number cars", "average fuel efficiency"]]
 
