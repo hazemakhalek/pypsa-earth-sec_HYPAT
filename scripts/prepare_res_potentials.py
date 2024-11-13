@@ -113,10 +113,7 @@ def merge_onwind(onwind, onwind_rest):
 
 
 def prepare_enertile(df, df_t):
-    tech_dict = {
-        "windonshore": "onwind",
-        "sopv": "solar",
-    }
+    tech_dict = {"windonshore": "onwind", "sopv": "solar", "pvr": "solar-rooftop"}
 
     regions = gpd.read_file(snakemake.input.regions_onshore_elec_s)
 
@@ -172,7 +169,7 @@ def prepare_enertile(df, df_t):
     )
 
     df = df.groupby(["Generator", "step", "simyear"], as_index=False).mean()
-    if technology == "solar":
+    if technology == "solar" or technology == "solar-rooftop":
         df["flh_class"] = "Q4"
     else:
         df = df.groupby(["Generator", "simyear"], as_index=False).apply(
@@ -181,6 +178,7 @@ def prepare_enertile(df, df_t):
 
     df.set_index(["Generator", "step", "simyear"], inplace=True)
     df_t.set_index(["region", "step", "simyear"], inplace=True)
+    df_t = df_t.loc[df.index]
     df_t["install_cap"] = df["p_nom_max"]
     df_t["potential"] = df["potential"]
     df_t["flh_class"] = df["flh_class"]
@@ -225,11 +223,7 @@ def prepare_enertile(df, df_t):
     # Export for every simyear and flh_class the sliced installable and res_t
     flh_class_dict = {"Q4": "", "Q3": "2", "Q2": "3", "Q1": "4"}
     for region, simyear, flh_class in installable.index:
-        ir = (
-            installable.loc[(slice(None), simyear, flh_class)]
-            .interestrate.mode()
-            .item()
-        )
+        ir = snakemake.config["costs"]["discountrate"][0]
         export_tech = technology + flh_class_dict[flh_class]
         logger.info(snakemake.output.keys())
         installable.loc[(slice(None), simyear, flh_class)].reset_index().to_csv(
@@ -272,6 +266,7 @@ if __name__ == "__main__":
     }
     renewables_enertile.remove("onwind_rest")
     for technology in renewables_enertile:
+        logger.info(f"Preparing {technology} data")
         prepare_enertile(
             df=data[technology]["potentials"], df_t=data[technology]["hourdata"]
         )

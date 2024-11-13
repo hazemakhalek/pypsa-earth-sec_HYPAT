@@ -519,7 +519,7 @@ def fix_rooftopPV_utilityScale_ratio(n, target_ratio=2):
     )
 
     # Filter for rooftop and utility-scale solar generators
-    rooftop_index = n.generators.loc[n.generators.carrier == "rooftop-solar"].index
+    rooftop_index = n.generators.loc[n.generators.carrier == "solar-rooftop"].index
     utility_index = n.generators.loc[n.generators.carrier == "solar"].index
 
     # Get the generator capacity variables (p_nom) for each generator type
@@ -594,7 +594,12 @@ def extra_functionality(n, snapshots):
         "ratio_rooftop_to_utility_solar"
     ]:
         fix_rooftopPV_utilityScale_ratio(
-            n, snakemake.config["policy_config"]["ratio_rooftop_to_utility_solar"]
+            n,
+            float(
+                snakemake.config["policy_config"]["renewables"][
+                    "ratio_rooftop_to_utility_solar"
+                ]
+            ),
         )
 
     add_co2_sequestration_limit(n, snapshots)
@@ -678,8 +683,8 @@ if __name__ == "__main__":
             ll="v1.0",
             opts="Co2L",
             planning_horizons="2035",
-            sopts="365H",
-            discountrate=0.071,
+            sopts="3H",
+            discountrate=0.06,
             demand="BI",
             h2export="0",
             h2mp="endogenous",

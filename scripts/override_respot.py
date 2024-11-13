@@ -64,7 +64,7 @@ def override_values(tech, year, dr, simpl, clusters):
 
     def annuity_factor(v):
         return (
-            annuity(v["lifetime"], snakemake.wildcards["discountrate"])
+            annuity(v["lifetime"], float(snakemake.wildcards["discountrate"]))
             + v["fixedomEuroPKW"] / v["investmentEuroPKW"] / 100
         )
 
